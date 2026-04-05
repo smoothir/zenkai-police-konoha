@@ -1,8 +1,8 @@
 // ==========================================
 // CONFIGURATION SUPABASE & VARIABLES
 // ==========================================
-const supabaseUrl = 'TON_URL_SUPABASE_ICI'; // Ex: https://ekjqgxkrmggojpjmsplk.supabase.co
-const supabaseKey = 'TA_CLE_PUBLIQUE_ICI';  // Ex: sb_publishable_WMPw10bY...
+const supabaseUrl = 'https://ekjqgxkrmggojpjmsplk.supabase.co'; // Ex: https://ekjqgxkrmggojpjmsplk.supabase.co
+const supabaseKey = 'sb_publishable_WMPw10bY6UFE8vZQsemdGg_SnqO4Ejk';  // Ex: sb_publishable_WMPw10bY...
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let ninjaJson = []; let casierJson = []; let bingoJson = [];
