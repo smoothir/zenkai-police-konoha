@@ -44,7 +44,7 @@ function createSakura() {
 // AUTHENTIFICATION DISCORD VIA SUPABASE
 // ==========================================
 async function checkLogin() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession(); // <-- MODIFICATION ICI
     
     if (!session) { 
         document.getElementById('login-screen').style.display = 'flex'; 
@@ -54,7 +54,7 @@ async function checkLogin() {
         document.getElementById('agent-name').innerHTML = `<i class="fas fa-user-shield"></i> Agent : ${currentUser}`; 
     }
 
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange((event, session) => { // <-- MODIFICATION ICI
         if (event === 'SIGNED_IN') {
             currentUser = session.user.user_metadata.custom_claims?.global_name || session.user.user_metadata.full_name || session.user.user_metadata.name || "Agent Inconnu";
             document.getElementById('login-screen').style.animation = "fadeOut 0.5s forwards";
@@ -66,7 +66,7 @@ async function checkLogin() {
 }
 
 async function performLogin() {
-    const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'discord' });
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({ provider: 'discord' }); // <-- MODIFICATION ICI
     if (error) {
         showToast("Erreur d'authentification avec Discord.", "error");
         console.error(error);
@@ -75,7 +75,7 @@ async function performLogin() {
 
 async function logout() { 
     addAuditLog("Déconnexion des serveurs.");
-    await supabase.auth.signOut(); 
+    await supabaseClient.auth.signOut(); // <-- MODIFICATION ICI
     location.reload(); 
 }
 
