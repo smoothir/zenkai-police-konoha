@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     checkLogin();
     loadFiles();
     setupDragAndDrop();
-    setupCustomSelect();
     setInterval(updateClock, 1000); updateClock();
     initDashboard();
     renderAll();
@@ -85,19 +84,17 @@ function saveFiles() {
 }
 
 function syncBase() { showToast("Sync en cours...", "info"); setTimeout(() => { showToast("Base synchronisée !", "success"); }, 1500); }
-function addAuditLog(msg) { const agent = currentUser || "Système"; activiteLog.unshift({ msg: `[${agent}] ${msg}`, date: new Date().toLocaleString('fr-FR') }); if(activiteLog.length > 50) activiteLog.pop(); saveFiles(); updateDashboardLog(); }
+function resetData() { if(confirm("Purger toute la base ? Irréversible.")) { localStorage.clear(); location.reload(); } }
 
-// MENU ET TABS
+function addAuditLog(msg) { 
+    const agent = currentUser || "Système"; 
+    activiteLog.unshift({ msg: `[${agent}] ${msg}`, date: new Date().toLocaleString('fr-FR') }); 
+    if(activiteLog.length > 50) activiteLog.pop(); 
+    saveFiles(); updateDashboardLog(); 
+}
+
+// MENU
 function toggleSubmenu(id) { document.getElementById(id).classList.toggle('open'); }
-function setupCustomSelect() {
-    document.addEventListener('click', e => { const sel = document.getElementById('chakra-select'); if (sel && !sel.contains(e.target)) document.getElementById('chakra-options').classList.remove('show'); });
-    document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateSelectText));
-}
-function toggleDropdown(id) { document.getElementById(id).classList.toggle('show'); }
-function updateSelectText() {
-    const checked = document.querySelectorAll('#chakra-options input[type="checkbox"]:checked');
-    document.querySelector('#chakra-select .select-box').innerHTML = checked.length === 0 ? 'Sélectionner... <span>▼</span>' : Array.from(checked).map(cb => cb.value).join(', ') + ' <span>▼</span>';
-}
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -110,7 +107,6 @@ function initDashboard() {
     document.getElementById('stat-ninjas').textContent = ninjaJson.length;
     document.getElementById('stat-casiers').textContent = casierJson.length;
     document.getElementById('stat-missions').textContent = missionJson.length;
-    document.getElementById('stat-enquetes').textContent = enqueteJson.length;
     updateDashboardLog();
 }
 function updateDashboardLog() { document.getElementById('activity-list').innerHTML = activiteLog.slice(0, 6).map(a => `<li><span class="audit-date">[${a.date}]</span> ${a.msg}</li>`).join(''); }
@@ -132,7 +128,7 @@ function handleMultipleFiles(e) {
 
 // UPLOAD UNIQUE
 function setupDragAndDrop() {
-    ['ninja', 'casier', 'bingo', 'village', 'clan', 'enquete', 'renseignement', 'recrutement'].forEach(type => {
+    ['ninja', 'casier', 'bingo', 'village', 'clan', 'renseignement', 'recrutement'].forEach(type => {
         const zone = document.getElementById(`zone-${type}`);
         if(zone) { zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = "var(--police-blue)"; }); zone.addEventListener('dragleave', e => { e.preventDefault(); zone.style.borderColor = "var(--gold-dark)"; }); zone.addEventListener('drop', e => { e.preventDefault(); zone.style.borderColor = "var(--gold-dark)"; if (e.dataTransfer.files[0]) processImageFile(e.dataTransfer.files[0], type); }); }
     });
@@ -152,6 +148,7 @@ function processImageFile(file, type) {
 }
 function clearImagePreview(type) {
     if(type==='mission') { document.getElementById('m-preview-container').innerHTML = ""; return; }
+    if(type==='enquete' || type==='judiciaire') return;
     if(document.getElementById(`preview-${type}`)) { document.getElementById(`preview-${type}`).src = ""; document.getElementById(`preview-${type}`).style.display = 'none'; document.getElementById(`text-${type}`).style.display = 'block'; document.getElementById(`${type.charAt(0)}-img-base64`).value = ""; }
 }
 
@@ -212,7 +209,6 @@ function openDossier(type, id) {
     document.getElementById('details-actions').innerHTML = `<button class="btn-edit" onclick="setupEdit('${type}', '${id}')"><i class="fas fa-pen"></i> Modifier</button><button class="btn-delete" onclick="deleteItem('${type}', '${id}')"><i class="fas fa-trash"></i> Supprimer</button>`;
 
     let html = ``;
-    // Colonne Photo (sauf mission, enquete, judiciaire qui n'ont pas forcément 1 grosse photo de profil, mais je la laisse pour ceux qui en ont)
     if(['ninja', 'casier', 'bingo', 'village', 'clan', 'renseignement', 'recrutement'].includes(type)) {
         const isDead = type === 'ninja' && item.statut === 'Décédé'; const isMissing = type === 'ninja' && (item.statut === 'Déserteur' || item.statut === 'Disparu');
         const stamp = isDead ? `<div class="stamp-overlay stamp-red" style="font-size:2rem; border-width:4px;">DÉCÉDÉ</div>` : (isMissing ? `<div class="stamp-overlay stamp-black" style="font-size:2rem; border-width:4px;">${item.statut.toUpperCase()}</div>` : '');
@@ -240,7 +236,7 @@ function openDossier(type, id) {
     if(type === 'judiciaire') html += `<div class="dossier-id" style="width:auto; display:inline-block; margin-bottom:15px;">N° ${item.id}</div><div class="dossier-block"><h4>Procédure</h4><div class="data-grid"><p><strong>Accusé(s):</strong> ${item.accuse}</p><p><strong>Magistrat:</strong> ${item.juge}</p><p><strong>Verdict:</strong> ${item.verdict}</p></div></div><div class="dossier-block"><h4>Détails de l'affaire</h4><p>${item.desc}</p></div>`;
     if(type === 'recrutement') html += `<div class="dossier-block"><h4>Candidature</h4><div class="data-grid"><p><strong>Âge:</strong> ${item.age}</p><p><strong>Département:</strong> ${item.dept}</p><p><strong>Statut:</strong> ${item.statut}</p></div></div><div class="dossier-block"><h4>Évaluation</h4><p>${item.desc}</p></div>`;
 
-    // FORUM / SUIVI (AJOUT PROGRESSIF) POUR TOUTES LES SECTIONS
+    // FORUM / SUIVI
     let suivisHtml = `<div class="dossier-block"><h4><i class="fas fa-comments"></i> Journal d'Évolution (Notes & Rapports)</h4><div class="thread-container">`;
     if(item.suivis && item.suivis.length > 0) {
         item.suivis.forEach(s => { suivisHtml += `<div class="thread-message"><span class="thread-meta">${s.date} - <strong>${s.agent}</strong></span><p>${s.texte}</p></div>`; });
@@ -254,20 +250,15 @@ function openDossier(type, id) {
     document.getElementById('modal-details').style.display = 'block';
 }
 
-// AJOUTER UNE NOTE AU DOSSIER (FORUM)
 function addSuivi(type, id) {
     const texte = document.getElementById('new-suivi-text').value.trim();
     if(!texte) return showToast("La note est vide.", "error");
-    
-    const list = getListByType(type);
-    const index = list.findIndex(i => i.id === id);
+    const list = getListByType(type); const index = list.findIndex(i => i.id === id);
     if(index > -1) {
         if(!list[index].suivis) list[index].suivis = [];
-        list[index].suivis.push({ texte: texte, date: new Date().toLocaleString('fr-FR'), agent: currentUser || "Agent Anonyme" });
+        list[index].suivis.push({ texte: texte, date: new Date().toLocaleString('fr-FR'), agent: currentUser || "Anonyme" });
         list[index].dateModification = new Date().toLocaleString('fr-FR');
-        saveFiles();
-        openDossier(type, id); // Refresh
-        showToast("Note ajoutée au dossier.", "success");
+        saveFiles(); openDossier(type, id); showToast("Note ajoutée.", "success");
     }
 }
 
@@ -279,7 +270,7 @@ function deleteItem(type, id) {
     if(index > -1) { 
         const itemName = getItemName(list[index]);
         list.splice(index, 1); 
-        addAuditLog(`Purge : L'archive de ${itemName} a été détruite.`); 
+        addAuditLog(`Purge : L'archive [${itemName}] a été détruite.`); 
         renderAll(); initDashboard(); closeModal('modal-details'); showToast("Purgé.", "success"); 
     }
 }
@@ -290,7 +281,10 @@ function setupEdit(type, id) {
     editMode = { active: true, type: type, id: id };
     document.getElementById(`title-${type}`).textContent = `Modification [${id}]`;
 
-    if(type === 'ninja') { vSet('n-nom', item.nom); vSet('n-prenom', item.prenom); vSet('n-age', item.age); vSet('n-grade', item.grade); vSet('n-clan', item.clan); vSet('n-statut', item.statut || "En Vie"); vSet('n-fort', item.fort); vSet('n-faible', item.faible); vSet('n-notes', item.notes); document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.checked = (item.natures && item.natures.includes(cb.value))); updateSelectText(); }
+    if(type === 'ninja') { 
+        vSet('n-nom', item.nom); vSet('n-prenom', item.prenom); vSet('n-age', item.age); vSet('n-grade', item.grade); vSet('n-clan', item.clan); vSet('n-statut', item.statut || "En Vie"); vSet('n-fort', item.fort); vSet('n-faible', item.faible); vSet('n-notes', item.notes); 
+        document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => { cb.checked = (item.natures && item.natures.includes(cb.value)); }); 
+    }
     else if(type === 'casier') { vSet('c-nom', item.nom); vSet('c-prenom', item.prenom); vSet('c-faits', item.faits); vSet('c-gravite', item.gravite); vSet('c-sanctions', item.sanctions); vSet('c-notes', item.notes); }
     else if(type === 'bingo') { vSet('b-nom', item.nom); vSet('b-rang', item.rang); vSet('b-prime', item.prime); vSet('b-notes', item.notes); }
     else if(type === 'village') { vSet('v-nom', item.nom); vSet('v-chef', item.chef); vSet('v-relation', item.relation); vSet('v-notes', item.notes); }
@@ -311,7 +305,9 @@ function openModal(id) {
     if(!editMode.active) { 
         if(document.getElementById(`form-${type}`)) document.getElementById(`form-${type}`).reset(); 
         clearImagePreview(type); 
-        if(type === 'ninja') { document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.checked = false); updateSelectText(); }
+        if(type === 'ninja') { document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.checked = false); }
+        const titles = { ninja: 'Immatriculation Shinobi', casier: 'Inculpation Criminelle', bingo: 'Avis de Recherche', village: 'Fiche Diplomatique', clan: 'Registre Généalogique', mission: 'Ordre de Mission', enquete: "Ouverture d'Enquête", renseignement: "Fiche Renseignement", judiciaire: "Dossier de Cour", recrutement: "Dossier Candidat" };
+        if(document.getElementById(`title-${type}`)) document.getElementById(`title-${type}`).textContent = titles[type]; 
     }
     document.getElementById(id).style.display = 'block'; 
 }
@@ -319,50 +315,56 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; ed
 
 function submitForm(e, type) {
     e.preventDefault();
-    const v = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
-    const prefix = {ninja:'NJ', casier:'CJ', bingo:'BB', village:'VL', clan:'CL', mission:'MI', enquete:'EQ', renseignement:'RS', judiciaire:'JU', recrutement:'RC'}[type];
-    const itemId = editMode.active ? editMode.id : prefix + "-" + Math.floor(Math.random() * 9000 + 1000);
-    const currentDate = new Date().toLocaleString('fr-FR');
-    let newItem = { id: itemId, dateModification: currentDate };
+    try {
+        const v = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+        const prefix = {ninja:'NJ', casier:'CJ', bingo:'BB', village:'VL', clan:'CL', mission:'MI', enquete:'EQ', renseignement:'RS', judiciaire:'JU', recrutement:'RC'}[type];
+        const itemId = editMode.active ? editMode.id : prefix + "-" + Math.floor(Math.random() * 9000 + 1000);
+        const currentDate = new Date().toLocaleString('fr-FR');
+        let newItem = { id: itemId, dateModification: currentDate };
 
-    if(type === 'mission') {
-        const imgs = Array.from(document.querySelectorAll('#m-preview-container img')).map(img => img.src);
-        newItem = { ...newItem, titre: v('m-titre'), rang: v('m-rang'), equipe: v('m-equipe'), statut: v('m-statut'), liens: v('m-liens'), desc: v('m-desc'), images: imgs };
-    } else if (['enquete', 'judiciaire'].includes(type)) {
-        if(type === 'enquete') newItem = { ...newItem, titre: v('e-titre'), statut: v('e-statut'), cibles: v('e-cibles'), desc: v('e-desc') };
-        if(type === 'judiciaire') newItem = { ...newItem, affaire: v('j-affaire'), verdict: v('j-verdict'), accuse: v('j-accuse'), juge: v('j-juge'), desc: v('j-desc') };
-    } else {
-        const imgElem = document.getElementById(`${type.charAt(0)}-img-base64`);
-        const imgBase64 = imgElem ? imgElem.value : (type==='recrutement' ? document.getElementById('rec-img-base64').value : "");
-        if(type === 'ninja') { newItem = { ...newItem, nom: v('n-nom'), prenom: v('n-prenom'), age: v('n-age'), grade: v('n-grade'), clan: v('n-clan'), statut: v('n-statut'), natures: Array.from(document.querySelectorAll('#chakra-options input:checked')).map(cb => cb.value), fort: v('n-fort'), faible: v('n-faible'), notes: v('n-notes'), img: imgBase64 }; }
-        else if(type === 'casier') { newItem = { ...newItem, nom: v('c-nom'), prenom: v('c-prenom'), faits: v('c-faits'), gravite: v('c-gravite'), sanctions: v('c-sanctions'), notes: v('c-notes'), img: imgBase64 }; }
-        else if(type === 'bingo') { newItem = { ...newItem, nom: v('b-nom'), rang: v('b-rang'), prime: v('b-prime'), notes: v('b-notes'), img: imgBase64 }; }
-        else if(type === 'village') { newItem = { ...newItem, nom: v('v-nom'), chef: v('v-chef'), relation: v('v-relation'), notes: v('v-notes'), img: imgBase64 }; }
-        else if(type === 'clan') { newItem = { ...newItem, nom: v('cl-nom'), chef: v('cl-chef'), heredite: v('cl-heredite'), histoire: v('cl-histoire'), notes: v('cl-notes'), img: imgBase64 }; }
-        else if(type === 'renseignement') { newItem = { ...newItem, sujet: v('r-sujet'), categorie: v('r-categorie'), fiabilite: v('r-fiabilite'), desc: v('r-desc'), img: imgBase64 }; }
-        else if(type === 'recrutement') { newItem = { ...newItem, candidat: v('rec-candidat'), age: v('rec-age'), dept: v('rec-dept'), statut: v('rec-statut'), desc: v('rec-desc'), img: imgBase64 }; }
+        if(type === 'mission') {
+            const imgs = Array.from(document.querySelectorAll('#m-preview-container img')).map(img => img.src);
+            newItem = { ...newItem, titre: v('m-titre'), rang: v('m-rang'), equipe: v('m-equipe'), statut: v('m-statut'), liens: v('m-liens'), desc: v('m-desc'), images: imgs };
+        } else if (['enquete', 'judiciaire'].includes(type)) {
+            if(type === 'enquete') newItem = { ...newItem, titre: v('e-titre'), statut: v('e-statut'), cibles: v('e-cibles'), desc: v('e-desc') };
+            if(type === 'judiciaire') newItem = { ...newItem, affaire: v('j-affaire'), verdict: v('j-verdict'), accuse: v('j-accuse'), juge: v('j-juge'), desc: v('j-desc') };
+        } else {
+            const imgElem = document.getElementById(`${type.charAt(0)}-img-base64`);
+            const imgBase64 = imgElem ? imgElem.value : (type==='recrutement' ? document.getElementById('rec-img-base64').value : "");
+            
+            if(type === 'ninja') { newItem = { ...newItem, nom: v('n-nom'), prenom: v('n-prenom'), age: v('n-age'), grade: v('n-grade'), clan: v('n-clan'), statut: v('n-statut'), natures: Array.from(document.querySelectorAll('#chakra-options input:checked')).map(cb => cb.value), fort: v('n-fort'), faible: v('n-faible'), notes: v('n-notes'), img: imgBase64 }; }
+            else if(type === 'casier') { newItem = { ...newItem, nom: v('c-nom'), prenom: v('c-prenom'), faits: v('c-faits'), gravite: v('c-gravite'), sanctions: v('c-sanctions'), notes: v('c-notes'), img: imgBase64 }; }
+            else if(type === 'bingo') { newItem = { ...newItem, nom: v('b-nom'), rang: v('b-rang'), prime: v('b-prime'), notes: v('b-notes'), img: imgBase64 }; }
+            else if(type === 'village') { newItem = { ...newItem, nom: v('v-nom'), chef: v('v-chef'), notes: v('v-notes'), img: imgBase64 }; }
+            else if(type === 'clan') { newItem = { ...newItem, nom: v('cl-nom'), chef: v('cl-chef'), heredite: v('cl-heredite'), histoire: v('cl-histoire'), notes: v('cl-notes'), img: imgBase64 }; }
+            else if(type === 'renseignement') { newItem = { ...newItem, sujet: v('r-sujet'), categorie: v('r-categorie'), fiabilite: v('r-fiabilite'), desc: v('r-desc'), img: imgBase64 }; }
+            else if(type === 'recrutement') { newItem = { ...newItem, candidat: v('rec-candidat'), age: v('rec-age'), dept: v('rec-dept'), statut: v('rec-statut'), desc: v('rec-desc'), img: imgBase64 }; }
+        }
+
+        const list = getListByType(type);
+        const itemName = getItemName(newItem);
+
+        if(editMode.active) {
+            const index = list.findIndex(i => i.id === itemId); 
+            newItem.dateCreation = list[index].dateCreation; 
+            newItem.suivis = list[index].suivis || [];
+            list[index] = newItem; 
+            addAuditLog(`Édition : L'archive [${itemName}] a été mise à jour.`); 
+            showToast("Scellé.", "success"); 
+        } 
+        else { 
+            newItem.dateCreation = currentDate; 
+            newItem.suivis = [];
+            list.unshift(newItem); 
+            addAuditLog(`Création : Nouveau dossier pour [${itemName}].`); 
+            showToast("Validé.", "success"); 
+        }
+        
+        saveFiles(); closeModal(`modal-${type}`); initDashboard(); renderAll();
+    } catch (err) {
+        showToast("Erreur système: " + err.message, "error");
+        console.error(err);
     }
-
-    const list = getListByType(type);
-    const itemName = getItemName(newItem);
-
-    if(editMode.active) {
-        const index = list.findIndex(i => i.id === itemId); 
-        newItem.dateCreation = list[index].dateCreation; 
-        newItem.suivis = list[index].suivis || []; // Conserver le forum
-        list[index] = newItem; 
-        addAuditLog(`Édition : L'archive de ${itemName} a été mise à jour.`); 
-        showToast("Scellé.", "success"); 
-    } 
-    else { 
-        newItem.dateCreation = currentDate; 
-        newItem.suivis = []; // Nouveau forum vierge
-        list.unshift(newItem); 
-        addAuditLog(`Création : Nouveau dossier pour ${itemName} enregistré.`); 
-        showToast("Validé.", "success"); 
-    }
-    
-    saveFiles(); closeModal(`modal-${type}`); initDashboard(); renderAll();
 }
 
 function showToast(msg, type="info") {
