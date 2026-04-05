@@ -15,12 +15,10 @@ const defaultLog = [{ msg: "[Système] Archives Konoha vierges.", date: defaultD
 document.addEventListener('DOMContentLoaded', () => {
     createSakura();
     checkLogin(); 
-    loadFiles();
     setupDragAndDrop();
     setupCustomSelect();
     setInterval(updateClock, 1000); updateClock();
-    initDashboard();
-    renderAll();
+    loadFiles(); // Le chargement Cloud va lancer l'affichage automatiquement
 });
 
 // ANIMATION SAKURA
