@@ -3,11 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT - Police Militaire de Konoha</title>
+    <title>MDT - Police de Konoha</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <div id="login-screen" class="login-overlay">
+        <div class="login-box paper-style">
+            <img src="policekonoha.png" alt="Logo Konoha" class="login-logo">
+            <h2>ACCÈS SÉCURISÉ ANBU/POLICE</h2>
+            <p>Veuillez décliner votre identité pour les logs.</p>
+            <input type="text" id="login-nom" placeholder="Nom de famille" required>
+            <input type="text" id="login-prenom" placeholder="Prénom" required>
+            <button onclick="performLogin()" class="btn-submit">S'identifier</button>
+        </div>
+    </div>
+
     <div class="vignette-overlay"></div>
     <div class="parchment-overlay"></div>
     <div id="toast-container"></div>
@@ -15,22 +26,22 @@
     <div class="mdt-container">
         <nav class="sidebar">
             <div class="logo-container">
-                <img src="policekonoha.png" alt="Police Konoha Logo" class="konoha-logo">
-                <h2>POLICE MILITAIRE</h2>
-                <p class="subtitle">Département des Archives</p>
+                <img src="policekonoha.png" alt="Police Konoha Logo" class="konoha-logo-big">
+                <h2>POLICE DE KONOHA</h2>
+                <p class="subtitle" id="agent-name">Agent non identifié</p>
             </div>
             <ul class="nav-links">
                 <li onclick="switchTab('accueil')" class="active"><i class="fas fa-torii-gate"></i> QG Central</li>
                 <li onclick="switchTab('registre')"><i class="fas fa-id-card"></i> Registre Shinobi</li>
                 <li onclick="switchTab('casiers')"><i class="fas fa-gavel"></i> Casier Judiciaire</li>
                 <li onclick="switchTab('bingo')"><i class="fas fa-book-skull"></i> Bingo Book</li>
-                <li onclick="switchTab('villages')"><i class="fas fa-map"></i> Atlas Mondial</li>
+                <li onclick="switchTab('villages')"><i class="fas fa-map"></i> Villages</li>
                 <li onclick="switchTab('clans')"><i class="fas fa-vihara"></i> Registre des Clans</li>
-                <li onclick="switchTab('missions')"><i class="fas fa-scroll"></i> Ordres de Missions</li>
+                <li onclick="switchTab('missions')"><i class="fas fa-scroll"></i> Rapports de Missions</li>
             </ul>
             <div class="sidebar-footer">
                 <button onclick="syncBase()" class="btn-action btn-sync"><i class="fas fa-rotate"></i> Sync. Sécurisée</button>
-                <button onclick="resetData()" class="btn-action btn-reset" style="margin-top:10px;"><i class="fas fa-trash-can"></i> Purger Base</button>
+                <button onclick="logout()" class="btn-action btn-reset" style="margin-top:10px;"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
             </div>
         </nav>
 
@@ -39,13 +50,13 @@
 
             <section id="accueil" class="tab-content active">
                 <div class="header-flex">
-                    <h1 class="page-title"><i class="fas fa-star-of-david"></i> Terminal Central</h1>
+                    <h1 class="page-title"><i class="fas fa-star-of-david"></i> Archives de la police</h1>
                     <div class="date-display" id="current-date"></div>
                 </div>
                 <div class="dashboard-grid">
                     <div class="stat-card"><div class="stat-icon"><i class="fas fa-user-ninja"></i></div><div class="stat-info"><h3>Effectif Actif</h3><p id="stat-ninjas">--</p></div></div>
                     <div class="stat-card"><div class="stat-icon"><i class="fas fa-file-contract"></i></div><div class="stat-info"><h3>Casiers Ouverts</h3><p id="stat-casiers">--</p></div></div>
-                    <div class="stat-card"><div class="stat-icon" style="background:#8b5a2b;"><i class="fas fa-scroll"></i></div><div class="stat-info"><h3>Opérations</h3><p id="stat-missions">--</p></div></div>
+                    <div class="stat-card"><div class="stat-icon" style="background:#8b5a2b;"><i class="fas fa-scroll"></i></div><div class="stat-info"><h3>Missions</h3><p id="stat-missions">--</p></div></div>
                 </div>
                 <div class="dashboard-lower">
                     <div class="recent-activity panel">
@@ -66,7 +77,7 @@
             <section id="registre" class="tab-content">
                 <div class="header-flex"><h1 class="page-title">📜 Registre des Shinobis</h1><button class="btn-create" onclick="openModal('modal-ninja')"><i class="fas fa-plus"></i> Nouveau Dossier</button></div>
                 <div class="filter-bar panel">
-                    <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" id="search-ninja" placeholder="Recherche par nom, matricule..." onkeyup="filterData('ninja')"></div>
+                    <div class="search-wrapper"><i class="fas fa-search"></i><input type="text" id="search-ninja" placeholder="Recherche par nom..." onkeyup="filterData('ninja')"></div>
                     <select id="filter-grade" onchange="filterData('ninja')"><option value="">Tous les grades</option><option value="Étudiant">Étudiant</option><option value="Genin">Genin</option><option value="Chūnin">Chūnin</option><option value="Jōnin">Jōnin</option><option value="ANBU">ANBU</option></select>
                 </div>
                 <div class="card-grid" id="ninja-grid"></div>
@@ -85,19 +96,19 @@
             </section>
 
             <section id="villages" class="tab-content">
-                <div class="header-flex"><h1 class="page-title">🗺️ Atlas Géopolitique</h1><button class="btn-create" onclick="openModal('modal-village')"><i class="fas fa-plus"></i> Nouveau Territoire</button></div>
-                <div class="filter-bar panel"><div class="search-wrapper"><i class="fas fa-search"></i><input type="text" id="search-village" placeholder="Nom de la nation..." onkeyup="filterData('village')"></div></div>
+                <div class="header-flex"><h1 class="page-title">🗺️ Atlas des Villages</h1><button class="btn-create" onclick="openModal('modal-village')"><i class="fas fa-plus"></i> Nouveau Village</button></div>
+                <div class="filter-bar panel"><div class="search-wrapper"><i class="fas fa-search"></i><input type="text" id="search-village" placeholder="Nom du village..." onkeyup="filterData('village')"></div></div>
                 <div class="card-grid" id="village-grid"></div>
             </section>
 
             <section id="clans" class="tab-content">
-                <div class="header-flex"><h1 class="page-title">⛩️ Lignées Nobles</h1><button class="btn-create" onclick="openModal('modal-clan')"><i class="fas fa-plus"></i> Archiver Clan</button></div>
+                <div class="header-flex"><h1 class="page-title">⛩️ Registre des Clans</h1><button class="btn-create" onclick="openModal('modal-clan')"><i class="fas fa-plus"></i> Archiver Clan</button></div>
                 <div class="filter-bar panel"><div class="search-wrapper"><i class="fas fa-search"></i><input type="text" id="search-clan" placeholder="Rechercher par clan..." onkeyup="filterData('clan')"></div></div>
                 <div class="card-grid" id="clan-grid"></div>
             </section>
 
             <section id="missions" class="tab-content">
-                <div class="header-flex"><h1 class="page-title">📜 Rapports d'Opérations</h1><button class="btn-create" onclick="openModal('modal-mission')"><i class="fas fa-plus"></i> Mandater</button></div>
+                <div class="header-flex"><h1 class="page-title">📜 Rapports de Missions</h1><button class="btn-create" onclick="openModal('modal-mission')"><i class="fas fa-plus"></i> Mandater</button></div>
                 <div class="filter-bar panel"><div class="search-wrapper"><i class="fas fa-search"></i><input type="text" id="search-mission" placeholder="Titre de la mission..." onkeyup="filterData('mission')"></div></div>
                 <div class="list-container" id="mission-list"></div>
             </section>
@@ -116,30 +127,41 @@
 
     <div id="modal-ninja" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-ninja')">&times;</span><h2 class="form-title" id="title-ninja">Immatriculation Shinobi</h2><form id="form-ninja" onsubmit="submitForm(event, 'ninja')"><div class="form-row"><div class="form-group" style="flex: 2;"><div class="form-row"><div class="form-group"><label>Nom de famille</label><input type="text" id="n-nom" required></div><div class="form-group"><label>Prénom</label><input type="text" id="n-prenom" required></div></div><div class="form-row"><div class="form-group"><label>Âge</label><input type="number" id="n-age" required></div><div class="form-group"><label>Grade Actuel</label><select id="n-grade" required><option value="Étudiant">Étudiant</option><option value="Genin">Genin</option><option value="Chūnin">Chūnin</option><option value="Jōnin">Jōnin</option><option value="ANBU">ANBU</option></select></div><div class="form-group"><label>Affiliation Clanique</label><select id="n-clan" required><option value="Civil (Sans Clan)">Civil (Sans Clan)</option><option value="Uchiha">Uchiha</option><option value="Hyūga">Hyūga</option><option value="Senju">Senju</option><option value="Uzumaki">Uzumaki</option><option value="Nara">Nara</option><option value="Akimichi">Akimichi</option><option value="Yamanaka">Yamanaka</option><option value="Aburame">Aburame</option><option value="Inuzuka">Inuzuka</option></select></div></div>
                     
-                    <div class="form-group">
-                        <label>Nature(s) de Chakra maîtrisée(s)</label>
-                        <div class="custom-select" id="chakra-select">
-                            <div class="select-box" onclick="toggleDropdown('chakra-options')">Sélectionner les natures... <span>▼</span></div>
-                            <div class="select-dropdown" id="chakra-options">
-                                <label><input type="checkbox" value="Katon"> 🔥 Katon (Feu)</label>
-                                <label><input type="checkbox" value="Suiton"> 💧 Suiton (Eau)</label>
-                                <label><input type="checkbox" value="Doton"> 🪨 Doton (Terre)</label>
-                                <label><input type="checkbox" value="Fūton"> 💨 Fūton (Vent)</label>
-                                <label><input type="checkbox" value="Raiton"> ⚡ Raiton (Foudre)</label>
-                                <label><input type="checkbox" value="Mokuton"> 🌳 Mokuton (Bois)</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nature(s) de Chakra maîtrisée(s)</label>
+                            <div class="custom-select" id="chakra-select">
+                                <div class="select-box" onclick="toggleDropdown('chakra-options')">Sélectionner les natures... <span>▼</span></div>
+                                <div class="select-dropdown" id="chakra-options">
+                                    <label><input type="checkbox" value="Katon"> 🔥 Katon (Feu)</label>
+                                    <label><input type="checkbox" value="Suiton"> 💧 Suiton (Eau)</label>
+                                    <label><input type="checkbox" value="Doton"> 🪨 Doton (Terre)</label>
+                                    <label><input type="checkbox" value="Fūton"> 💨 Fūton (Vent)</label>
+                                    <label><input type="checkbox" value="Raiton"> ⚡ Raiton (Foudre)</label>
+                                    <label><input type="checkbox" value="Mokuton"> 🌳 Mokuton (Bois)</label>
+                                </div>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Statut Actuel</label>
+                            <select id="n-statut" required>
+                                <option value="En Vie">En Vie / Actif</option>
+                                <option value="Décédé">Décédé (Mort au Combat)</option>
+                                <option value="Déserteur">Déserteur (Nukenin)</option>
+                                <option value="Disparu">Disparu (MIA)</option>
+                            </select>
                         </div>
                     </div>
 
                     </div><div class="form-group upload-container" style="flex: 1;"><label>Photographie Officielle</label><div class="upload-zone" id="zone-ninja" onclick="document.getElementById('file-ninja').click()"><div class="upload-text" id="text-ninja"><i class="fas fa-camera fa-2x"></i><br>Importer l'image</div><img id="preview-ninja" class="upload-preview" src="" style="display:none;"><input type="file" id="file-ninja" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'ninja')"></div><input type="hidden" id="n-img-base64" value=""></div></div><div class="form-row"><div class="form-group"><label>Aptitudes Majeures (Points Forts)</label><input type="text" id="n-fort" placeholder="Ex: Taijutsu, Vitesse..."></div><div class="form-group"><label>Failles Tactiques (Points Faibles)</label><input type="text" id="n-faible" placeholder="Ex: Genjutsu..."></div></div><div class="form-group"><label>Rapport d'évaluation global</label><textarea id="n-notes" required placeholder="Observations du commandement..."></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-save"></i> Sceller l'Archive</button></form></div></div>
 
-    <div id="modal-casier" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-casier')">&times;</span><h2 class="form-title" id="title-casier">Inculpation Criminelle</h2><form id="form-casier" onsubmit="submitForm(event, 'casier')"><div class="form-row"><div class="form-group" style="flex: 2;"><div class="form-row"><div class="form-group"><label>Nom du suspect</label><input type="text" id="c-nom" required></div><div class="form-group"><label>Prénom</label><input type="text" id="c-prenom" required></div></div><div class="form-group"><label>Chef d'accusation</label><input type="text" id="c-faits" required></div><div class="form-row"><div class="form-group"><label>Niveau de Menace</label><select id="c-gravite" required><option value="Mineure">Mineure</option><option value="Modérée">Modérée</option><option value="Sévère">Sévère (Trahison/Meurtre)</option></select></div><div class="form-group"><label>Jugement rendu</label><input type="text" id="c-sanctions" required></div></div></div><div class="form-group upload-container" style="flex: 1;"><label>Preuve visuelle / Mugshot</label><div class="upload-zone" id="zone-casier" onclick="document.getElementById('file-casier').click()"><div class="upload-text" id="text-casier"><i class="fas fa-camera fa-2x"></i></div><img id="preview-casier" class="upload-preview" src="" style="display:none;"><input type="file" id="file-casier" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'casier')"></div><input type="hidden" id="c-img-base64" value=""></div></div><button type="submit" class="btn-submit"><i class="fas fa-gavel"></i> Prononcer la sentence</button></form></div></div>
+    <div id="modal-casier" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-casier')">&times;</span><h2 class="form-title" id="title-casier">Inculpation Criminelle</h2><form id="form-casier" onsubmit="submitForm(event, 'casier')"><div class="form-row"><div class="form-group" style="flex: 2;"><div class="form-row"><div class="form-group"><label>Nom du suspect</label><input type="text" id="c-nom" required></div><div class="form-group"><label>Prénom</label><input type="text" id="c-prenom" required></div></div><div class="form-group"><label>Chef d'accusation</label><input type="text" id="c-faits" required></div><div class="form-row"><div class="form-group"><label>Niveau de Menace</label><select id="c-gravite" required><option value="Mineure">Mineure</option><option value="Modérée">Modérée</option><option value="Sévère">Sévère (Trahison/Meurtre)</option></select></div><div class="form-group"><label>Jugement rendu</label><input type="text" id="c-sanctions" required></div></div></div><div class="form-group upload-container" style="flex: 1;"><label>Preuve visuelle / Mugshot</label><div class="upload-zone" id="zone-casier" onclick="document.getElementById('file-casier').click()"><div class="upload-text" id="text-casier"><i class="fas fa-camera fa-2x"></i></div><img id="preview-casier" class="upload-preview" src="" style="display:none;"><input type="file" id="file-casier" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'casier')"></div><input type="hidden" id="c-img-base64" value=""></div></div><div class="form-group"><label>Notes & Commentaires</label><textarea id="c-notes"></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-gavel"></i> Prononcer la sentence</button></form></div></div>
 
     <div id="modal-bingo" class="modal"><div class="modal-content paper-style bingo-theme"><span class="close" onclick="closeModal('modal-bingo')">&times;</span><h2 class="form-title text-danger" id="title-bingo">Avis de Recherche</h2><form id="form-bingo" onsubmit="submitForm(event, 'bingo')"><div class="form-row"><div class="form-group" style="flex: 2;"><label>Identité de la cible</label><input type="text" id="b-nom" required><div class="form-row" style="margin-top:15px;"><div class="form-group"><label>Classification</label><select id="b-rang" required><option value="S">Classe S</option><option value="A">Classe A</option><option value="B">Classe B</option></select></div><div class="form-group"><label>Prime (Ryōs)</label><input type="number" id="b-prime" required></div></div></div><div class="form-group upload-container" style="flex: 1;"><label>Visuel</label><div class="upload-zone" id="zone-bingo" onclick="document.getElementById('file-bingo').click()" style="border-color:red; background:#1a1111;"><div class="upload-text" id="text-bingo"><i class="fas fa-skull fa-2x"></i></div><img id="preview-bingo" class="upload-preview" src="" style="display:none;"><input type="file" id="file-bingo" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'bingo')"></div><input type="hidden" id="b-img-base64" value=""></div></div><div class="form-group"><label>Ordres d'élimination & Renseignements</label><textarea id="b-notes" required></textarea></div><button type="submit" class="btn-submit btn-danger"><i class="fas fa-skull"></i> Autoriser l'élimination</button></form></div></div>
 
-    <div id="modal-village" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-village')">&times;</span><h2 class="form-title" id="title-village">Fiche Diplomatique</h2><form id="form-village" onsubmit="submitForm(event, 'village')"><div class="form-row"><div class="form-group" style="flex: 2;"><label>Pays / Village caché</label><input type="text" id="v-nom" required><label style="margin-top:15px;">Kage / Dirigeant</label><input type="text" id="v-chef" required><label style="margin-top:15px;">État des relations</label><select id="v-relation" required><option value="Allié">Alliance Stratégique</option><option value="Neutre">Pacte de Non-Agression</option><option value="Hostile">Guerre Ouverte</option></select></div><div class="form-group upload-container" style="flex: 1;"><label>Symbole</label><div class="upload-zone" id="zone-village" onclick="document.getElementById('file-village').click()"><div class="upload-text" id="text-village"><i class="fas fa-map-signs fa-2x"></i></div><img id="preview-village" class="upload-preview" src="" style="display:none;"><input type="file" id="file-village" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'village')"></div><input type="hidden" id="v-img-base64" value=""></div></div><div class="form-group"><label>Rapport Géopolitique</label><textarea id="v-notes" required></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-globe"></i> Archiver</button></form></div></div>
+    <div id="modal-village" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-village')">&times;</span><h2 class="form-title" id="title-village">Fiche Diplomatique</h2><form id="form-village" onsubmit="submitForm(event, 'village')"><div class="form-row"><div class="form-group" style="flex: 2;"><label>Pays / Village caché</label><input type="text" id="v-nom" required><label style="margin-top:15px;">Kage / Chef du village</label><input type="text" id="v-chef" required></div><div class="form-group upload-container" style="flex: 1;"><label>Symbole</label><div class="upload-zone" id="zone-village" onclick="document.getElementById('file-village').click()"><div class="upload-text" id="text-village"><i class="fas fa-map-signs fa-2x"></i></div><img id="preview-village" class="upload-preview" src="" style="display:none;"><input type="file" id="file-village" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'village')"></div><input type="hidden" id="v-img-base64" value=""></div></div><div class="form-group"><label>Notes Historiques & Renseignements</label><textarea id="v-notes" required></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-globe"></i> Archiver</button></form></div></div>
 
-    <div id="modal-clan" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-clan')">&times;</span><h2 class="form-title" id="title-clan">Registre Généalogique</h2><form id="form-clan" onsubmit="submitForm(event, 'clan')"><div class="form-row"><div class="form-group" style="flex: 2;"><div class="form-row"><div class="form-group"><label>Nom de la Maison</label><input type="text" id="cl-nom" required></div><div class="form-group"><label>Patriarche / Matriarche</label><input type="text" id="cl-chef" required></div></div><div class="form-group"><label>Kekkei Genkai ou Secret Martial</label><input type="text" id="cl-heredite" required></div></div><div class="form-group upload-container" style="flex: 1;"><label>Emblème</label><div class="upload-zone" id="zone-clan" onclick="document.getElementById('file-clan').click()"><div class="upload-text" id="text-clan"><i class="fas fa-yin-yang fa-2x"></i></div><img id="preview-clan" class="upload-preview" src="" style="display:none;"><input type="file" id="file-clan" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'clan')"></div><input type="hidden" id="cl-img-base64" value=""></div></div><div class="form-group"><label>Histoire de la lignée</label><textarea id="cl-histoire" required></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-scroll"></i> Valider</button></form></div></div>
+    <div id="modal-clan" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-clan')">&times;</span><h2 class="form-title" id="title-clan">Registre Généalogique</h2><form id="form-clan" onsubmit="submitForm(event, 'clan')"><div class="form-row"><div class="form-group" style="flex: 2;"><div class="form-row"><div class="form-group"><label>Nom de la Maison</label><input type="text" id="cl-nom" required></div><div class="form-group"><label>Patriarche / Matriarche</label><input type="text" id="cl-chef" required></div></div><div class="form-group"><label>Kekkei Genkai ou Secret Martial</label><input type="text" id="cl-heredite" required></div></div><div class="form-group upload-container" style="flex: 1;"><label>Emblème</label><div class="upload-zone" id="zone-clan" onclick="document.getElementById('file-clan').click()"><div class="upload-text" id="text-clan"><i class="fas fa-yin-yang fa-2x"></i></div><img id="preview-clan" class="upload-preview" src="" style="display:none;"><input type="file" id="file-clan" accept="image/*" style="display:none;" onchange="handleFileSelect(event, 'clan')"></div><input type="hidden" id="cl-img-base64" value=""></div></div><div class="form-group"><label>Histoire de la lignée</label><textarea id="cl-histoire" required></textarea></div><div class="form-group"><label>Notes</label><textarea id="cl-notes"></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-scroll"></i> Valider</button></form></div></div>
 
     <div id="modal-mission" class="modal"><div class="modal-content paper-style"><span class="close" onclick="closeModal('modal-mission')">&times;</span><h2 class="form-title" id="title-mission">Ordre de Mission Tactique</h2><form id="form-mission" onsubmit="submitForm(event, 'mission')"><div class="form-row"><div class="form-group"><label>Nom de l'opération</label><input type="text" id="m-titre" required></div><div class="form-group"><label>Difficulté</label><select id="m-rang" required><option value="D">Rang D (Civil)</option><option value="C">Rang C (Protection)</option><option value="B">Rang B (Combat)</option><option value="A">Rang A (Haut Risque)</option><option value="S">Rang S (Secret Défense)</option></select></div></div><div class="form-row"><div class="form-group"><label>Escouade déployée</label><input type="text" id="m-equipe" required></div><div class="form-group"><label>Rapport d'avancement</label><select id="m-statut" required><option value="En cours">Déployée / En cours</option><option value="Terminée">Succès de l'opération</option><option value="Échouée">Échec / Pertes</option></select></div></div><div class="form-group"><label>Détails de l'objectif</label><textarea id="m-desc" required></textarea></div><button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Transmettre l'Ordre</button></form></div></div>
 
