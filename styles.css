@@ -202,3 +202,17 @@ form textarea { height: 80px; resize: vertical; }
 .btn-export:hover { background: #1e4269; color: white; }
 .btn-import { background: #d48b1c; color: white; border: 1px solid #b07010; }
 .btn-import:hover { background: #b07010; color: white; }
+/* === LIGNES RECRUTEMENT (3 COLONNES) === */
+.recrutement-row { display: flex; background: var(--bg-panel); border: 1px solid var(--gold); border-left: 8px solid #2b5c8f; padding: 20px; border-radius: var(--radius); margin-bottom: 20px; position: relative; box-shadow: var(--shadow-soft); gap: 25px; }
+.recrutement-col { flex: 1; border-right: 1px dashed var(--gold-dark); padding-right: 25px; }
+.recrutement-col:last-child { border-right: none; padding-right: 0; }
+.recrutement-col h4 { font-family: 'Cinzel'; color: var(--police-blue); border-bottom: 1px solid rgba(189, 161, 110, 0.4); padding-bottom: 5px; margin-bottom: 15px; font-size: 1.05rem; }
+.recrutement-col p { font-size: 0.95rem; margin-bottom: 8px; line-height: 1.5; color: var(--text-main); }
+.rec-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; }
+.rec-actions button { padding: 8px 12px; font-size: 0.9rem; border: none; cursor: pointer; border-radius: 3px; color: white; transition: 0.2s;}
+.rec-actions .btn-edit { background: var(--police-blue); } .rec-actions .btn-edit:hover { background: var(--gold); color: var(--police-blue); }
+.rec-actions .btn-delete { background: var(--accent-red); } .rec-actions .btn-delete:hover { background: #ff4d4d; }
+.rec-status { display: inline-block; padding: 4px 10px; font-weight: bold; border-radius: 4px; font-size: 0.85rem; }
+.status-encours { background: #fff3cd; color: #f57f17; border: 1px solid #f57f17; }
+.status-accepte { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
+.status-refuse { background: #ffebee; color: #c62828; border: 1px solid #c62828; }
