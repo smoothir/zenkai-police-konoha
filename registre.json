@@ -1,17 +1,1 @@
-[
-  {
-    "id": "NJ-8821",
-    "nom": "Uzumaki",
-    "prenom": "Naruto",
-    "age": "16",
-    "clan": "Uzumaki",
-    "grade": "Genin",
-    "natures": ["Fūton"],
-    "fort": "Quantité de chakra",
-    "faible": "Genjutsu",
-    "notes": "Jinchūriki de Kyūbi.",
-    "img": "",
-    "dateCreation": "05/04/2026 01:56:00",
-    "dateModification": "05/04/2026 01:56:00"
-  }
-]
+[]
