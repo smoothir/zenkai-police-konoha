@@ -293,7 +293,34 @@ function setupEdit(type, id) {
     else if(type === 'enquete') { vSet('e-titre', item.titre); vSet('e-statut', item.statut); vSet('e-cibles', item.cibles); vSet('e-desc', item.desc); }
     else if(type === 'renseignement') { vSet('r-sujet', item.sujet); vSet('r-categorie', item.categorie); vSet('r-fiabilite', item.fiabilite); vSet('r-desc', item.desc); }
     else if(type === 'judiciaire') { vSet('j-affaire', item.affaire); vSet('j-verdict', item.verdict); vSet('j-accuse', item.accuse); vSet('j-juge', item.juge); vSet('j-desc', item.desc); }
-    else if(type === 'recrutement') { newItem = { ...newItem, nom: v('rec-nom'), prenom: v('rec-prenom'), age: v('rec-age'), chakra: v('rec-chakra'), agent: v('rec-agent'), statut: v('rec-statut'), avis: v('rec-avis'), desc: v('rec-desc'), img: imgBase64 }; }
+    else if(type === 'recrutement') { 
+            let statusClass = "status-encours";
+            if(item.statut === "Accepté") statusClass = "status-accepte";
+            if(item.statut === "Refusé") statusClass = "status-refuse";
+            
+            html += `<div class="recrutement-row">
+                <div class="rec-actions">
+                    <button class="btn-edit" onclick="setupEdit('recrutement', '${item.id}')" title="Modifier"><i class="fas fa-pen"></i></button>
+                    <button class="btn-delete" onclick="deleteItem('recrutement', '${item.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="recrutement-col">
+                    <h4><i class="fas fa-id-badge"></i> Profil Candidat</h4>
+                    <p><strong>Nom:</strong> ${itemName}</p>
+                    <p><strong>Âge:</strong> ${item.age || '--'} ans</p>
+                    <p><strong>Chakra:</strong> ${item.chakra || 'Non renseigné'}</p>
+                    <p><strong>Agent en charge:</strong> ${item.agent || '--'}</p>
+                    <p style="margin-top:10px;"><strong>Statut:</strong> <span class="rec-status ${statusClass}">${item.statut || 'En cours'}</span></p>
+                </div>
+                <div class="recrutement-col">
+                    <h4><i class="fas fa-comment-dots"></i> Avis du recruteur</h4>
+                    <p>${formatLinks(item.avis) || 'Aucun avis rédigé.'}</p>
+                </div>
+                <div class="recrutement-col">
+                    <h4><i class="fas fa-folder-open"></i> Autres Informations</h4>
+                    <p>${formatLinks(item.desc) || 'Aucune information supplémentaire.'}</p>
+                </div>
+            </div>`; 
+        }
 
     if(!['mission', 'enquete', 'judiciaire'].includes(type) && item.img) { document.getElementById(`preview-${type}`).src = item.img; document.getElementById(`preview-${type}`).style.display = 'block'; document.getElementById(`text-${type}`).style.display = 'none'; document.getElementById(`${type.charAt(0)}-img-base64`).value = item.img; }
     openModal(`modal-${type}`);
