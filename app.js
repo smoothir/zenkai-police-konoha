@@ -1,3 +1,11 @@
+// ==========================================
+// CONFIGURATION SUPABASE & VARIABLES
+// ==========================================
+// Remplacer par TES clés trouvées à l'étape 1
+const supabaseUrl = 'https://ekjqgxkrmggojpjmsplk.supabase.co'; 
+const supabaseKey = 'sb_publishable_WMPw10bY6UFE8vZQsemdGg_SnqO4Ejk';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 let ninjaJson = []; let casierJson = []; let bingoJson = [];
 let villageJson = []; let clanJson = []; let missionJson = [];
 let enqueteJson = []; let renseignementJson = []; let judiciaireJson = []; let recrutementJson = []; 
@@ -10,9 +18,10 @@ const defaultLog = [{ msg: "[Système] Archives Konoha vierges.", date: defaultD
 
 document.addEventListener('DOMContentLoaded', () => {
     createSakura();
-    checkLogin();
+    checkLogin(); // Va maintenant vérifier Supabase
     loadFiles();
     setupDragAndDrop();
+    setupCustomSelect();
     setInterval(updateClock, 1000); updateClock();
     initDashboard();
     renderAll();
