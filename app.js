@@ -83,38 +83,69 @@ async function logout() {
 function updateClock() { document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR') + " | " + new Date().toLocaleTimeString('fr-FR'); }
 
 // ==========================================
-// GESTION FICHIERS LOCAUX
+// GESTION BASE DE DONNÉES CLOUD (SUPABASE)
 // ==========================================
-function loadFiles() {
-    ninjaJson = JSON.parse(localStorage.getItem('json_ninjas')) || [];
-    casierJson = JSON.parse(localStorage.getItem('json_casiers')) || [];
-    bingoJson = JSON.parse(localStorage.getItem('json_bingo')) || [];
-    villageJson = JSON.parse(localStorage.getItem('json_villages')) || [];
-    clanJson = JSON.parse(localStorage.getItem('json_clans')) || [];
-    missionJson = JSON.parse(localStorage.getItem('json_missions')) || [];
-    enqueteJson = JSON.parse(localStorage.getItem('json_enquetes')) || [];
-    renseignementJson = JSON.parse(localStorage.getItem('json_renseignements')) || [];
-    judiciaireJson = JSON.parse(localStorage.getItem('json_judiciaires')) || [];
-    recrutementJson = JSON.parse(localStorage.getItem('json_recrutements')) || [];
-    activiteLog = JSON.parse(localStorage.getItem('json_logs')) || defaultLog;
+async function loadFiles() {
+    // 1. On télécharge les données depuis Supabase
+    const { data, error } = await supabaseClient.from('konoha_archives').select('*');
+    
+    if (error) {
+        showToast("Erreur de connexion Cloud.", "error");
+        console.error(error);
+    } else if (data && data.length > 0) {
+        // 2. On trie les données dans les bons dossiers
+        data.forEach(row => {
+            if(row.id === 'ninjas') ninjaJson = row.donnees;
+            if(row.id === 'casiers') casierJson = row.donnees;
+            if(row.id === 'bingo') bingoJson = row.donnees;
+            if(row.id === 'villages') villageJson = row.donnees;
+            if(row.id === 'clans') clanJson = row.donnees;
+            if(row.id === 'missions') missionJson = row.donnees;
+            if(row.id === 'enquetes') enqueteJson = row.donnees;
+            if(row.id === 'renseignements') renseignementJson = row.donnees;
+            if(row.id === 'judiciaires') judiciaireJson = row.donnees;
+            if(row.id === 'recrutements') recrutementJson = row.donnees;
+            if(row.id === 'logs') activiteLog = row.donnees;
+        });
+    }
+    // 3. On affiche tout à l'écran une fois le téléchargement terminé
+    initDashboard();
+    renderAll();
 }
 
-function saveFiles() {
-    localStorage.setItem('json_ninjas', JSON.stringify(ninjaJson));
-    localStorage.setItem('json_casiers', JSON.stringify(casierJson));
-    localStorage.setItem('json_bingo', JSON.stringify(bingoJson));
-    localStorage.setItem('json_villages', JSON.stringify(villageJson));
-    localStorage.setItem('json_clans', JSON.stringify(clanJson));
-    localStorage.setItem('json_missions', JSON.stringify(missionJson));
-    localStorage.setItem('json_enquetes', JSON.stringify(enqueteJson));
-    localStorage.setItem('json_renseignements', JSON.stringify(renseignementJson));
-    localStorage.setItem('json_judiciaires', JSON.stringify(judiciaireJson));
-    localStorage.setItem('json_recrutements', JSON.stringify(recrutementJson));
-    localStorage.setItem('json_logs', JSON.stringify(activiteLog));
+async function saveFiles() {
+    // On prépare les valises avec tous les dossiers actuels
+    const archives = [
+        { id: 'ninjas', categorie: 'registre', donnees: ninjaJson },
+        { id: 'casiers', categorie: 'judiciaire', donnees: casierJson },
+        { id: 'bingo', categorie: 'bingo', donnees: bingoJson },
+        { id: 'villages', categorie: 'atlas', donnees: villageJson },
+        { id: 'clans', categorie: 'clans', donnees: clanJson },
+        { id: 'missions', categorie: 'missions', donnees: missionJson },
+        { id: 'enquetes', categorie: 'enquetes', donnees: enqueteJson },
+        { id: 'renseignements', categorie: 'renseignements', donnees: renseignementJson },
+        { id: 'judiciaires', categorie: 'cour', donnees: judiciaireJson },
+        { id: 'recrutements', categorie: 'academie', donnees: recrutementJson },
+        { id: 'logs', categorie: 'systeme', donnees: activiteLog }
+    ];
+
+    // On envoie tout d'un coup sur Supabase
+    const { error } = await supabaseClient.from('konoha_archives').upsert(archives);
+    if (error) console.error("Erreur de sauvegarde Cloud:", error);
 }
 
-function syncBase() { showToast("Sync en cours...", "info"); setTimeout(() => { showToast("Base synchronisée !", "success"); }, 1500); }
-function resetData() { if(confirm("Purger toute la base ? Irréversible.")) { localStorage.clear(); location.reload(); } }
+function syncBase() { 
+    // Le bouton Sync. retélécharge désormais la base Cloud en direct !
+    loadFiles(); 
+    showToast("Base synchronisée avec le Cloud !", "success"); 
+}
+
+async function resetData() { 
+    if(confirm("Purger toute la base Cloud ? Irréversible.")) { 
+        await supabaseClient.from('konoha_archives').delete().neq('id', '0'); // Vide Supabase
+        location.reload(); 
+    } 
+}
 
 function addAuditLog(msg) { 
     const agent = currentUser || "Système"; 
