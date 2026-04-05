@@ -55,6 +55,9 @@
             </ul>
             <div class="sidebar-footer">
                 <button onclick="syncBase()" class="btn-action btn-sync"><i class="fas fa-rotate"></i> Sync.</button>
+                <button onclick="exportData()" class="btn-action btn-export" style="margin-top:8px;"><i class="fas fa-download"></i> Sauvegarde PC</button>
+                <button onclick="document.getElementById('import-file').click()" class="btn-action btn-import" style="margin-top:8px;"><i class="fas fa-upload"></i> Importer Base</button>
+                <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
                 <button onclick="logout()" class="btn-action btn-reset" style="margin-top:8px;"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
                 <button onclick="resetData()" class="btn-action" style="margin-top:8px; background: transparent; border: 1px solid #777; color: #888; font-size: 0.7rem;"><i class="fas fa-trash"></i> Purger Base</button>
             </div>
