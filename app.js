@@ -194,7 +194,7 @@ function filterData(type) {
         else if(type === 'enquete') { html += `<div class="list-item" onclick="openDossier('enquete', '${item.id}')" style="border-left-color:#162438"><div style="flex:1;"><h3>Affaire: ${itemName}</h3><p style="color:var(--text-muted); font-size:0.85rem;">Suspect(s): ${item.cibles}</p></div><span class="card-badge">${item.statut}</span></div>`; }
         else if(type === 'renseignement') { html += `<div class="card" onclick="openDossier('renseignement', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img"></div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">${item.categorie}</span></div></div>`; }
         else if(type === 'judiciaire') { html += `<div class="list-item" onclick="openDossier('judiciaire', '${item.id}')" style="border-left-color:#8c7348"><div style="flex:1;"><h3>${itemName}</h3><p style="color:var(--text-muted); font-size:0.85rem;">Accusé: ${item.accuse}</p></div><span class="card-badge">${item.verdict}</span></div>`; }
-        else if(type === 'recrutement') { html += `<div class="card" onclick="openDossier('recrutement', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img"></div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">${item.dept}</span></div></div>`; }
+        if(type === 'recrutement') html += `<div class="dossier-block"><h4>Profil Candidat</h4><div class="data-grid"><p><strong>Âge:</strong> ${item.age}</p><p><strong>Chakra:</strong> ${item.chakra}</p><p><strong>Agent en charge:</strong> ${item.agent}</p><p><strong>Statut:</strong> ${item.statut}</p></div></div><div class="dossier-block"><h4>Avis du recruteur</h4><p>${formatLinks(item.avis)}</p></div><div class="dossier-block"><h4>Autres Informations</h4><p>${formatLinks(item.desc)}</p></div>`;
     });
     if(results.length === 0) html = `<p style="grid-column: 1/-1; text-align:center; font-style:italic; color:#888; margin-top:10px;">Aucun résultat.</p>`;
     if(container) container.innerHTML = html;
@@ -293,7 +293,7 @@ function setupEdit(type, id) {
     else if(type === 'enquete') { vSet('e-titre', item.titre); vSet('e-statut', item.statut); vSet('e-cibles', item.cibles); vSet('e-desc', item.desc); }
     else if(type === 'renseignement') { vSet('r-sujet', item.sujet); vSet('r-categorie', item.categorie); vSet('r-fiabilite', item.fiabilite); vSet('r-desc', item.desc); }
     else if(type === 'judiciaire') { vSet('j-affaire', item.affaire); vSet('j-verdict', item.verdict); vSet('j-accuse', item.accuse); vSet('j-juge', item.juge); vSet('j-desc', item.desc); }
-    else if(type === 'recrutement') { vSet('rec-candidat', item.candidat); vSet('rec-age', item.age); vSet('rec-dept', item.dept); vSet('rec-statut', item.statut); vSet('rec-desc', item.desc); }
+    else if(type === 'recrutement') { vSet('rec-nom', item.nom); vSet('rec-prenom', item.prenom); vSet('rec-age', item.age); vSet('rec-chakra', item.chakra); vSet('rec-agent', item.agent); vSet('rec-statut', item.statut); vSet('rec-avis', item.avis); vSet('rec-desc', item.desc); }
 
     if(!['mission', 'enquete', 'judiciaire'].includes(type) && item.img) { document.getElementById(`preview-${type}`).src = item.img; document.getElementById(`preview-${type}`).style.display = 'block'; document.getElementById(`text-${type}`).style.display = 'none'; document.getElementById(`${type.charAt(0)}-img-base64`).value = item.img; }
     openModal(`modal-${type}`);
