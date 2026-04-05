@@ -1,11 +1,11 @@
 let ninjaJson = []; let casierJson = []; let bingoJson = [];
-let villageJson = []; let clanJson = []; let missionJson = []; let activiteLog = [];
+let villageJson = []; let clanJson = []; let missionJson = [];
+let enqueteJson = []; let renseignementJson = []; let judiciaireJson = []; let recrutementJson = []; 
+let activiteLog = [];
 let editMode = { active: false, type: null, id: null };
 let currentUser = null;
 
 const defaultDate = new Date().toLocaleString('fr-FR');
-const defaultNinjas = []; const defaultCasiers = []; const defaultBingo = [];
-const defaultVillages = []; const defaultClans = []; const defaultMissions = [];
 const defaultLog = [{ msg: "[Système] Archives Konoha vierges.", date: defaultDate }];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -43,7 +43,7 @@ function performLogin() {
     const nom = document.getElementById('login-nom').value.trim().toUpperCase();
     const prenom = document.getElementById('login-prenom').value.trim();
     if (nom && prenom) {
-        currentUser = `${nom} ${prenom}`;
+        currentUser = `${prenom} ${nom}`;
         sessionStorage.setItem('rpUser', currentUser);
         document.getElementById('login-screen').style.animation = "fadeOut 0.5s forwards";
         setTimeout(() => document.getElementById('login-screen').style.display = 'none', 500);
@@ -57,12 +57,16 @@ function logout() { addAuditLog("Déconnexion."); sessionStorage.removeItem('rpU
 function updateClock() { document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR') + " | " + new Date().toLocaleTimeString('fr-FR'); }
 
 function loadFiles() {
-    ninjaJson = JSON.parse(localStorage.getItem('json_ninjas')) || defaultNinjas;
-    casierJson = JSON.parse(localStorage.getItem('json_casiers')) || defaultCasiers;
-    bingoJson = JSON.parse(localStorage.getItem('json_bingo')) || defaultBingo;
-    villageJson = JSON.parse(localStorage.getItem('json_villages')) || defaultVillages;
-    clanJson = JSON.parse(localStorage.getItem('json_clans')) || defaultClans;
-    missionJson = JSON.parse(localStorage.getItem('json_missions')) || defaultMissions;
+    ninjaJson = JSON.parse(localStorage.getItem('json_ninjas')) || [];
+    casierJson = JSON.parse(localStorage.getItem('json_casiers')) || [];
+    bingoJson = JSON.parse(localStorage.getItem('json_bingo')) || [];
+    villageJson = JSON.parse(localStorage.getItem('json_villages')) || [];
+    clanJson = JSON.parse(localStorage.getItem('json_clans')) || [];
+    missionJson = JSON.parse(localStorage.getItem('json_missions')) || [];
+    enqueteJson = JSON.parse(localStorage.getItem('json_enquetes')) || [];
+    renseignementJson = JSON.parse(localStorage.getItem('json_renseignements')) || [];
+    judiciaireJson = JSON.parse(localStorage.getItem('json_judiciaires')) || [];
+    recrutementJson = JSON.parse(localStorage.getItem('json_recrutements')) || [];
     activiteLog = JSON.parse(localStorage.getItem('json_logs')) || defaultLog;
 }
 
@@ -73,14 +77,17 @@ function saveFiles() {
     localStorage.setItem('json_villages', JSON.stringify(villageJson));
     localStorage.setItem('json_clans', JSON.stringify(clanJson));
     localStorage.setItem('json_missions', JSON.stringify(missionJson));
+    localStorage.setItem('json_enquetes', JSON.stringify(enqueteJson));
+    localStorage.setItem('json_renseignements', JSON.stringify(renseignementJson));
+    localStorage.setItem('json_judiciaires', JSON.stringify(judiciaireJson));
+    localStorage.setItem('json_recrutements', JSON.stringify(recrutementJson));
     localStorage.setItem('json_logs', JSON.stringify(activiteLog));
 }
 
-function resetData() { if(confirm("Purger la base ? Irréversible.")) { localStorage.clear(); location.reload(); } }
 function syncBase() { showToast("Sync en cours...", "info"); setTimeout(() => { showToast("Base synchronisée !", "success"); }, 1500); }
 function addAuditLog(msg) { const agent = currentUser || "Système"; activiteLog.unshift({ msg: `[${agent}] ${msg}`, date: new Date().toLocaleString('fr-FR') }); if(activiteLog.length > 50) activiteLog.pop(); saveFiles(); updateDashboardLog(); }
 
-// ACCORDEON & SELECT
+// MENU ET TABS
 function toggleSubmenu(id) { document.getElementById(id).classList.toggle('open'); }
 function setupCustomSelect() {
     document.addEventListener('click', e => { const sel = document.getElementById('chakra-select'); if (sel && !sel.contains(e.target)) document.getElementById('chakra-options').classList.remove('show'); });
@@ -103,6 +110,7 @@ function initDashboard() {
     document.getElementById('stat-ninjas').textContent = ninjaJson.length;
     document.getElementById('stat-casiers').textContent = casierJson.length;
     document.getElementById('stat-missions').textContent = missionJson.length;
+    document.getElementById('stat-enquetes').textContent = enqueteJson.length;
     updateDashboardLog();
 }
 function updateDashboardLog() { document.getElementById('activity-list').innerHTML = activiteLog.slice(0, 6).map(a => `<li><span class="audit-date">[${a.date}]</span> ${a.msg}</li>`).join(''); }
@@ -122,8 +130,9 @@ function handleMultipleFiles(e) {
     }
 }
 
+// UPLOAD UNIQUE
 function setupDragAndDrop() {
-    ['ninja', 'casier', 'bingo', 'village', 'clan'].forEach(type => {
+    ['ninja', 'casier', 'bingo', 'village', 'clan', 'enquete', 'renseignement', 'recrutement'].forEach(type => {
         const zone = document.getElementById(`zone-${type}`);
         if(zone) { zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = "var(--police-blue)"; }); zone.addEventListener('dragleave', e => { e.preventDefault(); zone.style.borderColor = "var(--gold-dark)"; }); zone.addEventListener('drop', e => { e.preventDefault(); zone.style.borderColor = "var(--gold-dark)"; if (e.dataTransfer.files[0]) processImageFile(e.dataTransfer.files[0], type); }); }
     });
@@ -146,43 +155,65 @@ function clearImagePreview(type) {
     if(document.getElementById(`preview-${type}`)) { document.getElementById(`preview-${type}`).src = ""; document.getElementById(`preview-${type}`).style.display = 'none'; document.getElementById(`text-${type}`).style.display = 'block'; document.getElementById(`${type.charAt(0)}-img-base64`).value = ""; }
 }
 
-function getListByType(type) { switch(type) { case 'ninja': return ninjaJson; case 'casier': return casierJson; case 'bingo': return bingoJson; case 'village': return villageJson; case 'clan': return clanJson; case 'mission': return missionJson; default: return []; } }
-function renderAll() { ['ninja', 'casier', 'bingo', 'village', 'clan', 'mission'].forEach(filterData); }
+function getListByType(type) { 
+    switch(type) { 
+        case 'ninja': return ninjaJson; case 'casier': return casierJson; case 'bingo': return bingoJson; case 'village': return villageJson; case 'clan': return clanJson; case 'mission': return missionJson; 
+        case 'enquete': return enqueteJson; case 'renseignement': return renseignementJson; case 'judiciaire': return judiciaireJson; case 'recrutement': return recrutementJson;
+        default: return []; 
+    } 
+}
+function getItemName(item) {
+    if (item.nom && item.prenom) return `${item.prenom} ${item.nom}`;
+    if (item.nom) return item.nom; if (item.titre) return item.titre; if (item.sujet) return item.sujet; if (item.affaire) return item.affaire; if (item.candidat) return item.candidat; return item.id;
+}
+
+function renderAll() { ['ninja', 'casier', 'bingo', 'village', 'clan', 'mission', 'enquete', 'renseignement', 'judiciaire', 'recrutement'].forEach(filterData); }
 
 function filterData(type) {
-    const searchVal = document.getElementById(`search-${type}`).value.toLowerCase();
+    const searchElem = document.getElementById(`search-${type}`);
+    const searchVal = searchElem ? searchElem.value.toLowerCase() : "";
     let filterVal = document.getElementById(`filter-grade`) && type==='ninja' ? document.getElementById('filter-grade').value : "";
     let results = getListByType(type);
 
-    if(searchVal) results = results.filter(i => ((i.nom||'') + ' ' + (i.prenom||'') + ' ' + (i.titre||'')).toLowerCase().includes(searchVal) || i.id.toLowerCase().includes(searchVal));
-    if(filterVal) results = results.filter(i => i.grade === filterVal);
+    if(searchVal) results = results.filter(i => getItemName(i).toLowerCase().includes(searchVal) || i.id.toLowerCase().includes(searchVal));
+    if(filterVal && type==='ninja') results = results.filter(i => i.grade === filterVal);
 
     const container = document.getElementById(`${type}-grid`) || document.getElementById(`${type}-list`); let html = "";
 
     results.forEach(item => {
         const imgSrc = item.img && item.img.startsWith('data:image') ? item.img : 'https://r2.fivemanage.com/y6F8XOoj6raoMaOk41fDy/policekonoha.png';
+        const itemName = getItemName(item);
+
         if(type === 'ninja') {
             const isDead = item.statut === 'Décédé'; const isMissing = item.statut === 'Déserteur' || item.statut === 'Disparu';
             const stamp = isDead ? `<div class="stamp-overlay stamp-red">DÉCÉDÉ</div>` : (isMissing ? `<div class="stamp-overlay stamp-black">${item.statut.toUpperCase()}</div>` : '');
-            html += `<div class="card ${isDead||isMissing?'card-dead':''}" onclick="openDossier('ninja', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img">${stamp}</div><div class="card-content"><h3>${item.nom} ${item.prenom}</h3><span class="card-badge">${item.grade}</span></div></div>`;
+            html += `<div class="card ${isDead||isMissing?'card-dead':''}" onclick="openDossier('ninja', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img">${stamp}</div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">${item.grade}</span></div></div>`;
         }
-        else if(type === 'casier') { const color = item.gravite === "Sévère" ? "var(--accent-red)" : (item.gravite === "Modérée" ? "#d48b1c" : "#2e7d32"); html += `<div class="list-item" onclick="openDossier('casier', '${item.id}')" style="border-left-color:${color}"><img src="${imgSrc}" class="list-img"><div style="flex:1;"><h3>${item.nom} ${item.prenom}</h3><p style="color:var(--text-muted); font-size:0.85rem;">${item.faits}</p></div><span class="card-badge" style="background:${color};color:white;border:none">${item.gravite}</span></div>`; }
-        else if(type === 'bingo') { html += `<div class="card bingo" onclick="openDossier('bingo', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img"></div><div class="card-content"><h3>${item.nom}</h3><span class="card-badge">Cible ${item.rang}</span><p style="margin-top:5px; font-weight:bold; color:#ffcc00; font-size:0.9rem;">${item.prime} ¥</p></div></div>`; }
-        else if(type === 'village') { html += `<div class="card" onclick="openDossier('village', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img" style="object-fit:contain; padding:20px;"></div><div class="card-content"><h3>${item.nom}</h3><span class="card-badge">${item.chef}</span></div></div>`; }
-        else if(type === 'clan') { html += `<div class="card" onclick="openDossier('clan', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img" style="object-fit:contain; padding:20px;"></div><div class="card-content"><h3>Clan ${item.nom}</h3><span class="card-badge">${item.chef}</span></div></div>`; }
-        else if(type === 'mission') { html += `<div class="list-item" onclick="openDossier('mission', '${item.id}')" style="border-left-color:#8b5a2b"><div style="flex:1;"><h3>[Rang ${item.rang}] ${item.titre}</h3><p style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-users"></i> ${item.equipe}</p></div><span class="card-badge">${item.statut}</span></div>`; }
+        else if(type === 'casier') { const color = item.gravite === "Sévère" ? "var(--accent-red)" : (item.gravite === "Modérée" ? "#d48b1c" : "#2e7d32"); html += `<div class="list-item" onclick="openDossier('casier', '${item.id}')" style="border-left-color:${color}"><img src="${imgSrc}" class="list-img"><div style="flex:1;"><h3>${itemName}</h3><p style="color:var(--text-muted); font-size:0.85rem;">${item.faits}</p></div><span class="card-badge" style="background:${color};color:white;border:none">${item.gravite}</span></div>`; }
+        else if(type === 'bingo') { html += `<div class="card bingo" onclick="openDossier('bingo', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img"></div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">Cible ${item.rang}</span><p style="margin-top:5px; font-weight:bold; color:#ffcc00; font-size:0.9rem;">${item.prime} ¥</p></div></div>`; }
+        else if(type === 'village') { html += `<div class="card" onclick="openDossier('village', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img" style="object-fit:contain; padding:20px;"></div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">${item.chef}</span></div></div>`; }
+        else if(type === 'clan') { html += `<div class="card" onclick="openDossier('clan', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img" style="object-fit:contain; padding:20px;"></div><div class="card-content"><h3>Clan ${itemName}</h3><span class="card-badge">${item.chef}</span></div></div>`; }
+        else if(type === 'mission') { html += `<div class="list-item" onclick="openDossier('mission', '${item.id}')" style="border-left-color:#8b5a2b"><div style="flex:1;"><h3>[Rang ${item.rang}] ${itemName}</h3><p style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-users"></i> ${item.equipe}</p></div><span class="card-badge">${item.statut}</span></div>`; }
+        else if(type === 'enquete') { html += `<div class="list-item" onclick="openDossier('enquete', '${item.id}')" style="border-left-color:#162438"><div style="flex:1;"><h3>Affaire: ${itemName}</h3><p style="color:var(--text-muted); font-size:0.85rem;">Suspect(s): ${item.cibles}</p></div><span class="card-badge">${item.statut}</span></div>`; }
+        else if(type === 'renseignement') { html += `<div class="card" onclick="openDossier('renseignement', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img"></div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">${item.categorie}</span></div></div>`; }
+        else if(type === 'judiciaire') { html += `<div class="list-item" onclick="openDossier('judiciaire', '${item.id}')" style="border-left-color:#8c7348"><div style="flex:1;"><h3>${itemName}</h3><p style="color:var(--text-muted); font-size:0.85rem;">Accusé: ${item.accuse}</p></div><span class="card-badge">${item.verdict}</span></div>`; }
+        else if(type === 'recrutement') { html += `<div class="card" onclick="openDossier('recrutement', '${item.id}')"><div class="card-img-container"><img src="${imgSrc}" class="card-img"></div><div class="card-content"><h3>${itemName}</h3><span class="card-badge">${item.dept}</span></div></div>`; }
     });
     if(results.length === 0) html = `<p style="grid-column: 1/-1; text-align:center; font-style:italic; color:#888; margin-top:10px;">Aucun résultat.</p>`;
-    container.innerHTML = html;
+    if(container) container.innerHTML = html;
 }
 
+// OUVERTURE DOSSIER & FORUM (SUIVIS)
 function openDossier(type, id) {
     const item = getListByType(type).find(i => i.id === id);
     const imgSrc = item.img && item.img.startsWith('data:image') ? item.img : 'https://r2.fivemanage.com/y6F8XOoj6raoMaOk41fDy/policekonoha.png';
+    const itemName = getItemName(item);
+
     document.getElementById('details-actions').innerHTML = `<button class="btn-edit" onclick="setupEdit('${type}', '${id}')"><i class="fas fa-pen"></i> Modifier</button><button class="btn-delete" onclick="deleteItem('${type}', '${id}')"><i class="fas fa-trash"></i> Supprimer</button>`;
 
     let html = ``;
-    if(type !== 'mission') {
+    // Colonne Photo (sauf mission, enquete, judiciaire qui n'ont pas forcément 1 grosse photo de profil, mais je la laisse pour ceux qui en ont)
+    if(['ninja', 'casier', 'bingo', 'village', 'clan', 'renseignement', 'recrutement'].includes(type)) {
         const isDead = type === 'ninja' && item.statut === 'Décédé'; const isMissing = type === 'ninja' && (item.statut === 'Déserteur' || item.statut === 'Disparu');
         const stamp = isDead ? `<div class="stamp-overlay stamp-red" style="font-size:2rem; border-width:4px;">DÉCÉDÉ</div>` : (isMissing ? `<div class="stamp-overlay stamp-black" style="font-size:2rem; border-width:4px;">${item.statut.toUpperCase()}</div>` : '');
         html += `<div class="dossier-photo-col"><div class="dossier-photo-frame"><img src="${imgSrc}" class="dossier-photo">${stamp}</div><div class="dossier-id">${item.id}</div>`;
@@ -190,7 +221,8 @@ function openDossier(type, id) {
         html += `</div>`;
     }
 
-    html += `<div class="dossier-info-col" style="${type==='mission' ? 'width:100%' : ''}"><div class="dossier-header"><h2 class="dossier-name">${item.nom ? item.nom + ' ' + (item.prenom||'') : item.titre}</h2>${type === 'ninja' ? `<span class="card-badge" style="background:var(--police-blue); color:var(--gold);">${item.grade}</span>` : ''}</div>`;
+    const needsFullWidth = ['mission', 'enquete', 'judiciaire'].includes(type);
+    html += `<div class="dossier-info-col" style="${needsFullWidth ? 'width:100%' : ''}"><div class="dossier-header"><h2 class="dossier-name">${itemName}</h2>${type === 'ninja' ? `<span class="card-badge" style="background:var(--police-blue); color:var(--gold);">${item.grade}</span>` : ''}</div>`;
     
     if(type === 'ninja') html += `<div class="dossier-block"><h4>Identité</h4><div class="data-grid"><p><strong>Statut:</strong> <span style="color:${item.statut==='En Vie'?'green':'red'}; font-weight:bold;">${item.statut}</span></p><p><strong>Âge:</strong> ${item.age}</p><p><strong>Clan:</strong> ${item.clan}</p><p><strong>Chakra:</strong> ${(item.natures && item.natures.length>0)?item.natures.join(', '):"Inconnu"}</p></div></div><div class="dossier-block"><h4>Profil</h4><p><strong>Fort:</strong> ${item.fort}</p><p><strong>Faible:</strong> ${item.faible}</p></div><div class="dossier-block"><h4>Notes</h4><p>${item.notes}</p></div>`;
     if(type === 'casier') html += `<div class="dossier-block"><h4>Délit</h4><p><strong>Faits :</strong> ${item.faits}</p><p><strong>Gravite :</strong> <span style="color:${item.gravite==='Sévère'?'red':(item.gravite==='Modérée'?'orange':'green')}; font-weight:bold;">${item.gravite}</span></p></div><div class="dossier-block"><h4>Jugement</h4><p>${item.sanctions}</p></div><div class="dossier-block"><h4>Notes</h4><p>${item.notes}</p></div>`;
@@ -201,10 +233,20 @@ function openDossier(type, id) {
         html += `<div class="dossier-id" style="width:auto; display:inline-block; margin-bottom:15px;">N° ${item.id}</div><div class="dossier-block"><h4>Détails</h4><div class="data-grid"><p><strong>Rang:</strong> ${item.rang}</p><p><strong>Statut:</strong> ${item.statut}</p><p><strong>Équipe:</strong> ${item.equipe}</p></div></div>`;
         if(item.liens) html += `<div class="dossier-block"><h4>Lien / Doc</h4><a href="${item.liens}" target="_blank" style="color:var(--police-blue); font-weight:bold;">${item.liens}</a></div>`;
         html += `<div class="dossier-block"><h4>Objectifs</h4><p>${item.desc}</p></div>`;
-        if(item.images && item.images.length > 0) {
-            html += `<div class="dossier-block"><h4>Preuves Visuelles</h4><div class="multi-preview">` + item.images.map(img => `<img src="${img}" class="mission-thumb" style="width:80px;height:80px;cursor:default;">`).join('') + `</div></div>`;
-        }
+        if(item.images && item.images.length > 0) { html += `<div class="dossier-block"><h4>Preuves Visuelles</h4><div class="multi-preview">` + item.images.map(img => `<img src="${img}" class="mission-thumb" style="width:80px;height:80px;cursor:default;">`).join('') + `</div></div>`; }
     }
+    if(type === 'enquete') html += `<div class="dossier-id" style="width:auto; display:inline-block; margin-bottom:15px;">N° ${item.id}</div><div class="dossier-block"><h4>Infos Enquête</h4><div class="data-grid"><p><strong>Statut:</strong> ${item.statut}</p><p><strong>Cibles/Suspects:</strong> ${item.cibles}</p></div></div><div class="dossier-block"><h4>Description</h4><p>${item.desc}</p></div>`;
+    if(type === 'renseignement') html += `<div class="dossier-block"><h4>Origine</h4><p><strong>Catégorie :</strong> ${item.categorie}</p><p><strong>Fiabilité :</strong> ${item.fiabilite}</p></div><div class="dossier-block"><h4>Rapport complet</h4><p>${item.desc}</p></div>`;
+    if(type === 'judiciaire') html += `<div class="dossier-id" style="width:auto; display:inline-block; margin-bottom:15px;">N° ${item.id}</div><div class="dossier-block"><h4>Procédure</h4><div class="data-grid"><p><strong>Accusé(s):</strong> ${item.accuse}</p><p><strong>Magistrat:</strong> ${item.juge}</p><p><strong>Verdict:</strong> ${item.verdict}</p></div></div><div class="dossier-block"><h4>Détails de l'affaire</h4><p>${item.desc}</p></div>`;
+    if(type === 'recrutement') html += `<div class="dossier-block"><h4>Candidature</h4><div class="data-grid"><p><strong>Âge:</strong> ${item.age}</p><p><strong>Département:</strong> ${item.dept}</p><p><strong>Statut:</strong> ${item.statut}</p></div></div><div class="dossier-block"><h4>Évaluation</h4><p>${item.desc}</p></div>`;
+
+    // FORUM / SUIVI (AJOUT PROGRESSIF) POUR TOUTES LES SECTIONS
+    let suivisHtml = `<div class="dossier-block"><h4><i class="fas fa-comments"></i> Journal d'Évolution (Notes & Rapports)</h4><div class="thread-container">`;
+    if(item.suivis && item.suivis.length > 0) {
+        item.suivis.forEach(s => { suivisHtml += `<div class="thread-message"><span class="thread-meta">${s.date} - <strong>${s.agent}</strong></span><p>${s.texte}</p></div>`; });
+    } else { suivisHtml += `<p style="font-style:italic; color:#888; margin-bottom:10px;">Aucune note supplémentaire pour le moment.</p>`; }
+    suivisHtml += `</div><div class="thread-input-box"><textarea id="new-suivi-text" placeholder="Ajouter une nouvelle information, rapport ou mise à jour au dossier..."></textarea><button class="btn-submit" onclick="addSuivi('${type}', '${item.id}')" style="padding:10px; font-size:0.9rem;"><i class="fas fa-plus"></i> Ajouter l'information</button></div></div>`;
+    html += suivisHtml;
 
     document.getElementById('details-content').innerHTML = html + "</div>";
     document.getElementById('audit-log-display').innerHTML = `Créé: ${item.dateCreation} | Modifié: ${item.dateModification}`;
@@ -212,12 +254,34 @@ function openDossier(type, id) {
     document.getElementById('modal-details').style.display = 'block';
 }
 
+// AJOUTER UNE NOTE AU DOSSIER (FORUM)
+function addSuivi(type, id) {
+    const texte = document.getElementById('new-suivi-text').value.trim();
+    if(!texte) return showToast("La note est vide.", "error");
+    
+    const list = getListByType(type);
+    const index = list.findIndex(i => i.id === id);
+    if(index > -1) {
+        if(!list[index].suivis) list[index].suivis = [];
+        list[index].suivis.push({ texte: texte, date: new Date().toLocaleString('fr-FR'), agent: currentUser || "Agent Anonyme" });
+        list[index].dateModification = new Date().toLocaleString('fr-FR');
+        saveFiles();
+        openDossier(type, id); // Refresh
+        showToast("Note ajoutée au dossier.", "success");
+    }
+}
+
 function linkToCasier(nom, prenom) { closeModal('modal-details'); switchTab('casiers'); document.getElementById('search-casier').value = (nom + " " + prenom).trim(); filterData('casier'); }
 
 function deleteItem(type, id) {
     if(!confirm("Purger définitivement cette archive ?")) return;
     const list = getListByType(type); const index = list.findIndex(i => i.id === id);
-    if(index > -1) { list.splice(index, 1); addAuditLog(`Purge : [${id}]`); renderAll(); initDashboard(); closeModal('modal-details'); showToast("Purgé.", "success"); }
+    if(index > -1) { 
+        const itemName = getItemName(list[index]);
+        list.splice(index, 1); 
+        addAuditLog(`Purge : L'archive de ${itemName} a été détruite.`); 
+        renderAll(); initDashboard(); closeModal('modal-details'); showToast("Purgé.", "success"); 
+    }
 }
 
 function setupEdit(type, id) {
@@ -229,21 +293,26 @@ function setupEdit(type, id) {
     if(type === 'ninja') { vSet('n-nom', item.nom); vSet('n-prenom', item.prenom); vSet('n-age', item.age); vSet('n-grade', item.grade); vSet('n-clan', item.clan); vSet('n-statut', item.statut || "En Vie"); vSet('n-fort', item.fort); vSet('n-faible', item.faible); vSet('n-notes', item.notes); document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.checked = (item.natures && item.natures.includes(cb.value))); updateSelectText(); }
     else if(type === 'casier') { vSet('c-nom', item.nom); vSet('c-prenom', item.prenom); vSet('c-faits', item.faits); vSet('c-gravite', item.gravite); vSet('c-sanctions', item.sanctions); vSet('c-notes', item.notes); }
     else if(type === 'bingo') { vSet('b-nom', item.nom); vSet('b-rang', item.rang); vSet('b-prime', item.prime); vSet('b-notes', item.notes); }
-    else if(type === 'village') { vSet('v-nom', item.nom); vSet('v-chef', item.chef); vSet('v-notes', item.notes); }
+    else if(type === 'village') { vSet('v-nom', item.nom); vSet('v-chef', item.chef); vSet('v-relation', item.relation); vSet('v-notes', item.notes); }
     else if(type === 'clan') { vSet('cl-nom', item.nom); vSet('cl-chef', item.chef); vSet('cl-heredite', item.heredite); vSet('cl-histoire', item.histoire); vSet('cl-notes', item.notes); }
-    else if(type === 'mission') { 
-        vSet('m-titre', item.titre); vSet('m-rang', item.rang); vSet('m-equipe', item.equipe); vSet('m-statut', item.statut); vSet('m-liens', item.liens||''); vSet('m-desc', item.desc); 
-        document.getElementById('m-preview-container').innerHTML = (item.images||[]).map(img => `<img src="${img}" class="mission-thumb" onclick="this.remove()">`).join('');
-    }
+    else if(type === 'mission') { vSet('m-titre', item.titre); vSet('m-rang', item.rang); vSet('m-equipe', item.equipe); vSet('m-statut', item.statut); vSet('m-liens', item.liens||''); vSet('m-desc', item.desc); document.getElementById('m-preview-container').innerHTML = (item.images||[]).map(img => `<img src="${img}" class="mission-thumb" onclick="this.remove()">`).join(''); }
+    else if(type === 'enquete') { vSet('e-titre', item.titre); vSet('e-statut', item.statut); vSet('e-cibles', item.cibles); vSet('e-desc', item.desc); }
+    else if(type === 'renseignement') { vSet('r-sujet', item.sujet); vSet('r-categorie', item.categorie); vSet('r-fiabilite', item.fiabilite); vSet('r-desc', item.desc); }
+    else if(type === 'judiciaire') { vSet('j-affaire', item.affaire); vSet('j-verdict', item.verdict); vSet('j-accuse', item.accuse); vSet('j-juge', item.juge); vSet('j-desc', item.desc); }
+    else if(type === 'recrutement') { vSet('rec-candidat', item.candidat); vSet('rec-age', item.age); vSet('rec-dept', item.dept); vSet('rec-statut', item.statut); vSet('rec-desc', item.desc); }
 
-    if(type !== 'mission' && item.img) { document.getElementById(`preview-${type}`).src = item.img; document.getElementById(`preview-${type}`).style.display = 'block'; document.getElementById(`text-${type}`).style.display = 'none'; document.getElementById(`${type.charAt(0)}-img-base64`).value = item.img; }
+    if(!['mission', 'enquete', 'judiciaire'].includes(type) && item.img) { document.getElementById(`preview-${type}`).src = item.img; document.getElementById(`preview-${type}`).style.display = 'block'; document.getElementById(`text-${type}`).style.display = 'none'; document.getElementById(`${type.charAt(0)}-img-base64`).value = item.img; }
     openModal(`modal-${type}`);
 }
 function vSet(id, value) { if(document.getElementById(id)) document.getElementById(id).value = value; }
 
 function openModal(id) { 
     const type = id.replace('modal-', '');
-    if(!editMode.active) { document.getElementById(`form-${type}`).reset(); clearImagePreview(type); if(type === 'ninja') { document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.checked = false); updateSelectText(); } document.getElementById(`title-${type}`).textContent = "Nouvelle Entrée"; }
+    if(!editMode.active) { 
+        if(document.getElementById(`form-${type}`)) document.getElementById(`form-${type}`).reset(); 
+        clearImagePreview(type); 
+        if(type === 'ninja') { document.querySelectorAll('#chakra-options input[type="checkbox"]').forEach(cb => cb.checked = false); updateSelectText(); }
+    }
     document.getElementById(id).style.display = 'block'; 
 }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; editMode = { active: false, type: null, id: null }; }
@@ -251,7 +320,7 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; ed
 function submitForm(e, type) {
     e.preventDefault();
     const v = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
-    const prefix = {ninja:'NJ', casier:'CJ', bingo:'BB', village:'VL', clan:'CL', mission:'MI'}[type];
+    const prefix = {ninja:'NJ', casier:'CJ', bingo:'BB', village:'VL', clan:'CL', mission:'MI', enquete:'EQ', renseignement:'RS', judiciaire:'JU', recrutement:'RC'}[type];
     const itemId = editMode.active ? editMode.id : prefix + "-" + Math.floor(Math.random() * 9000 + 1000);
     const currentDate = new Date().toLocaleString('fr-FR');
     let newItem = { id: itemId, dateModification: currentDate };
@@ -259,18 +328,39 @@ function submitForm(e, type) {
     if(type === 'mission') {
         const imgs = Array.from(document.querySelectorAll('#m-preview-container img')).map(img => img.src);
         newItem = { ...newItem, titre: v('m-titre'), rang: v('m-rang'), equipe: v('m-equipe'), statut: v('m-statut'), liens: v('m-liens'), desc: v('m-desc'), images: imgs };
+    } else if (['enquete', 'judiciaire'].includes(type)) {
+        if(type === 'enquete') newItem = { ...newItem, titre: v('e-titre'), statut: v('e-statut'), cibles: v('e-cibles'), desc: v('e-desc') };
+        if(type === 'judiciaire') newItem = { ...newItem, affaire: v('j-affaire'), verdict: v('j-verdict'), accuse: v('j-accuse'), juge: v('j-juge'), desc: v('j-desc') };
     } else {
-        const imgBase64 = document.getElementById(`${type.charAt(0)}-img-base64`).value;
+        const imgElem = document.getElementById(`${type.charAt(0)}-img-base64`);
+        const imgBase64 = imgElem ? imgElem.value : (type==='recrutement' ? document.getElementById('rec-img-base64').value : "");
         if(type === 'ninja') { newItem = { ...newItem, nom: v('n-nom'), prenom: v('n-prenom'), age: v('n-age'), grade: v('n-grade'), clan: v('n-clan'), statut: v('n-statut'), natures: Array.from(document.querySelectorAll('#chakra-options input:checked')).map(cb => cb.value), fort: v('n-fort'), faible: v('n-faible'), notes: v('n-notes'), img: imgBase64 }; }
         else if(type === 'casier') { newItem = { ...newItem, nom: v('c-nom'), prenom: v('c-prenom'), faits: v('c-faits'), gravite: v('c-gravite'), sanctions: v('c-sanctions'), notes: v('c-notes'), img: imgBase64 }; }
         else if(type === 'bingo') { newItem = { ...newItem, nom: v('b-nom'), rang: v('b-rang'), prime: v('b-prime'), notes: v('b-notes'), img: imgBase64 }; }
-        else if(type === 'village') { newItem = { ...newItem, nom: v('v-nom'), chef: v('v-chef'), notes: v('v-notes'), img: imgBase64 }; }
+        else if(type === 'village') { newItem = { ...newItem, nom: v('v-nom'), chef: v('v-chef'), relation: v('v-relation'), notes: v('v-notes'), img: imgBase64 }; }
         else if(type === 'clan') { newItem = { ...newItem, nom: v('cl-nom'), chef: v('cl-chef'), heredite: v('cl-heredite'), histoire: v('cl-histoire'), notes: v('cl-notes'), img: imgBase64 }; }
+        else if(type === 'renseignement') { newItem = { ...newItem, sujet: v('r-sujet'), categorie: v('r-categorie'), fiabilite: v('r-fiabilite'), desc: v('r-desc'), img: imgBase64 }; }
+        else if(type === 'recrutement') { newItem = { ...newItem, candidat: v('rec-candidat'), age: v('rec-age'), dept: v('rec-dept'), statut: v('rec-statut'), desc: v('rec-desc'), img: imgBase64 }; }
     }
 
     const list = getListByType(type);
-    if(editMode.active) { const index = list.findIndex(i => i.id === itemId); newItem.dateCreation = list[index].dateCreation; list[index] = newItem; addAuditLog(`Édition [${itemId}]`); showToast("Scellé.", "success"); } 
-    else { newItem.dateCreation = currentDate; list.unshift(newItem); addAuditLog(`Création [${itemId}]`); showToast("Validé.", "success"); }
+    const itemName = getItemName(newItem);
+
+    if(editMode.active) {
+        const index = list.findIndex(i => i.id === itemId); 
+        newItem.dateCreation = list[index].dateCreation; 
+        newItem.suivis = list[index].suivis || []; // Conserver le forum
+        list[index] = newItem; 
+        addAuditLog(`Édition : L'archive de ${itemName} a été mise à jour.`); 
+        showToast("Scellé.", "success"); 
+    } 
+    else { 
+        newItem.dateCreation = currentDate; 
+        newItem.suivis = []; // Nouveau forum vierge
+        list.unshift(newItem); 
+        addAuditLog(`Création : Nouveau dossier pour ${itemName} enregistré.`); 
+        showToast("Validé.", "success"); 
+    }
     
     saveFiles(); closeModal(`modal-${type}`); initDashboard(); renderAll();
 }
