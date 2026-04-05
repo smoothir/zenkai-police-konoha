@@ -1,6 +1,3 @@
-// ==========================================
-// CONFIGURATION SUPABASE & VARIABLES
-// ==========================================
 const supabaseUrl = 'https://ekjqgxkrmggojpjmsplk.supabase.co'; 
 const supabaseKey = 'sb_publishable_WMPw10bY6UFE8vZQsemdGg_SnqO4Ejk';  
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
