@@ -293,7 +293,7 @@ function setupEdit(type, id) {
     else if(type === 'enquete') { vSet('e-titre', item.titre); vSet('e-statut', item.statut); vSet('e-cibles', item.cibles); vSet('e-desc', item.desc); }
     else if(type === 'renseignement') { vSet('r-sujet', item.sujet); vSet('r-categorie', item.categorie); vSet('r-fiabilite', item.fiabilite); vSet('r-desc', item.desc); }
     else if(type === 'judiciaire') { vSet('j-affaire', item.affaire); vSet('j-verdict', item.verdict); vSet('j-accuse', item.accuse); vSet('j-juge', item.juge); vSet('j-desc', item.desc); }
-    else if(type === 'recrutement') { vSet('rec-nom', item.nom); vSet('rec-prenom', item.prenom); vSet('rec-age', item.age); vSet('rec-chakra', item.chakra); vSet('rec-agent', item.agent); vSet('rec-statut', item.statut); vSet('rec-avis', item.avis); vSet('rec-desc', item.desc); }
+    else if(type === 'recrutement') { newItem = { ...newItem, nom: v('rec-nom'), prenom: v('rec-prenom'), age: v('rec-age'), chakra: v('rec-chakra'), agent: v('rec-agent'), statut: v('rec-statut'), avis: v('rec-avis'), desc: v('rec-desc'), img: imgBase64 }; }
 
     if(!['mission', 'enquete', 'judiciaire'].includes(type) && item.img) { document.getElementById(`preview-${type}`).src = item.img; document.getElementById(`preview-${type}`).style.display = 'block'; document.getElementById(`text-${type}`).style.display = 'none'; document.getElementById(`${type.charAt(0)}-img-base64`).value = item.img; }
     openModal(`modal-${type}`);
@@ -371,4 +371,66 @@ function showToast(msg, type="info") {
     const c = document.getElementById('toast-container'); const t = document.createElement('div'); t.className = `toast ${type==='error'?'error':''}`;
     t.innerHTML = `${type==='success'?'<i class="fas fa-check-circle"></i>':'<i class="fas fa-info-circle"></i>'} <span>${msg}</span>`;
     c.appendChild(t); setTimeout(() => { t.style.animation = 'fadeOut 0.3s forwards'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// ==========================================
+// IMPORT / EXPORT (SAUVEGARDE PC)
+// ==========================================
+function exportData() {
+    saveFiles(); 
+    const allData = { ninjaJson, casierJson, bingoJson, villageJson, clanJson, missionJson, enqueteJson, renseignementJson, judiciaireJson, recrutementJson, activiteLog };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `Archives_Police_Konoha_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.json`);
+    document.body.appendChild(dlAnchorElem);
+    dlAnchorElem.click();
+    document.body.removeChild(dlAnchorElem);
+    addAuditLog("Exportation manuelle de la base de données.");
+    showToast("Base de données téléchargée sur votre PC.", "success");
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if(importedData.ninjaJson !== undefined) {
+                ninjaJson = importedData.ninjaJson; casierJson = importedData.casierJson; bingoJson = importedData.bingoJson;
+                villageJson = importedData.villageJson; clanJson = importedData.clanJson; missionJson = importedData.missionJson;
+                enqueteJson = importedData.enqueteJson; renseignementJson = importedData.renseignementJson; 
+                judiciaireJson = importedData.judiciaireJson; recrutementJson = importedData.recrutementJson;
+                activiteLog = importedData.activiteLog;
+                saveFiles();
+                alert("Importation réussie ! Le système va redémarrer.");
+                location.reload();
+            } else { showToast("Fichier de sauvegarde non reconnu.", "error"); }
+        } catch(err) { showToast("Erreur lors de la lecture du fichier.", "error"); }
+    };
+    reader.readAsText(file);
+}
+
+// ==========================================
+// SYSTÈME D'HYPERLIENS DYNAMIQUES
+// ==========================================
+// Permet de rendre les matricules (ex: NJ-1234) cliquables dans les textes
+function formatLinks(text) {
+    if (!text) return "";
+    const regex = /([A-Z]{2}-\d{4})/g;
+    return text.replace(regex, `<span class="hyperlink" onclick="openDossierFromLink('$1')"><i class="fas fa-link"></i> $1</span>`);
+}
+
+function openDossierFromLink(matricule) {
+    const prefix = matricule.substring(0, 2);
+    const map = { 'NJ':'ninja', 'CJ':'casier', 'BB':'bingo', 'VL':'village', 'CL':'clan', 'MI':'mission', 'EQ':'enquete', 'RS':'renseignement', 'JU':'judiciaire', 'RC':'recrutement' };
+    const type = map[prefix];
+    
+    if(type) {
+        closeModal('modal-details');
+        setTimeout(() => openDossier(type, matricule), 300); // Petit délai pour l'animation
+    } else {
+        showToast("Matricule introuvable dans la base.", "error");
+    }
 }
