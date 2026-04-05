@@ -194,3 +194,11 @@ form textarea { height: 80px; resize: vertical; }
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes fadeOut { to { opacity: 0; } }
 ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #090e16; } ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 4px; }
+
+/* HYPERLIENS & IMPORT/EXPORT */
+.hyperlink { color: var(--accent-red); font-weight: bold; cursor: pointer; text-decoration: underline dashed; transition: 0.2s; padding: 0 4px; border-radius: 3px; }
+.hyperlink:hover { background: var(--accent-red); color: #fff; text-decoration: none; }
+.btn-export { background: #2b5c8f; color: white; border: 1px solid #1e4269; }
+.btn-export:hover { background: #1e4269; color: white; }
+.btn-import { background: #d48b1c; color: white; border: 1px solid #b07010; }
+.btn-import:hover { background: #b07010; color: white; }
