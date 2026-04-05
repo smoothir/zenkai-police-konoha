@@ -66,7 +66,13 @@ async function checkLogin() {
 }
 
 async function performLogin() {
-    const { data, error } = await supabaseClient.auth.signInWithOAuth({ provider: 'discord' }); // <-- MODIFICATION ICI
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({ 
+        provider: 'discord',
+        options: {
+            // Force le retour sur la bonne page GitHub Pages
+            redirectTo: 'https://smoothir.github.io/zenkai-police-konoha/'
+        }
+    });
     if (error) {
         showToast("Erreur d'authentification avec Discord.", "error");
         console.error(error);
