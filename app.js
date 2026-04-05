@@ -1,9 +1,9 @@
 // ==========================================
 // CONFIGURATION SUPABASE & VARIABLES
 // ==========================================
-const supabaseUrl = 'https://ekjqgxkrmggojpjmsplk.supabase.co'; // Ex: https://ekjqgxkrmggojpjmsplk.supabase.co
-const supabaseKey = 'sb_publishable_WMPw10bY6UFE8vZQsemdGg_SnqO4Ejk';  // Ex: sb_publishable_WMPw10bY...
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://ekjqgxkrmggojpjmsplk.supabase.co'; 
+const supabaseKey = 'sb_publishable_WMPw10bY6UFE8vZQsemdGg_SnqO4Ejk';  
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey); // <-- MODIFICATION ICI
 
 let ninjaJson = []; let casierJson = []; let bingoJson = [];
 let villageJson = []; let clanJson = []; let missionJson = [];
